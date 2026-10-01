@@ -17,7 +17,8 @@ import {
   DollarSign,
   ClipboardList,
   Search,
-  RotateCcw
+  RotateCcw,
+  EyeOff
 } from "lucide-react";
 import { OFFICIAL_STUDENTS_LIST, Student, StudentHistoryEntry } from "@/lib/studentsData";
 
@@ -32,6 +33,9 @@ interface AcademySettings {
   easyPaisa: string;
   jazzCash: string;
   overseasNote: string;
+  adminPin: string;
+  teacherPin: string;
+  supervisorPin: string;
 }
 
 interface SupervisorReport {
@@ -181,7 +185,10 @@ const initialSettings: AcademySettings = {
   bankIBAN: "PK12MEZN0001234567890101",
   easyPaisa: "0300-1234567 (Title: Academy Admin)",
   jazzCash: "0321-7654321 (Title: Academy Admin)",
-  overseasNote: "International payments accepted via Wise, Remitly, WorldRemit, and Direct Wire Transfer."
+  overseasNote: "International payments accepted via Wise, Remitly, WorldRemit, and Direct Wire Transfer.",
+  adminPin: "7860",
+  teacherPin: "1234",
+  supervisorPin: "9900"
 };
 
 export default function RealLMSApp() {
@@ -192,6 +199,16 @@ export default function RealLMSApp() {
     role: "admin" | "teacher" | "supervisor" | "student";
     teacherId?: string;
   } | null>(null);
+
+  // Login Authentication & Passcode States
+  const [activeLoginRole, setActiveLoginRole] = useState<"admin" | "teacher" | "supervisor" | "student">("admin");
+  const [adminPinInput, setAdminPinInput] = useState<string>("");
+  const [teacherPinInput, setTeacherPinInput] = useState<string>("");
+  const [supervisorPinInput, setSupervisorPinInput] = useState<string>("");
+  const [studentSearchInput, setStudentSearchInput] = useState<string>("");
+  const [selectedStudentLoginId, setSelectedStudentLoginId] = useState<string>("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // App Data State
   const [students, setStudents] = useState<Student[]>([]);
@@ -277,16 +294,81 @@ export default function RealLMSApp() {
     role: "admin" | "teacher" | "supervisor" | "student",
     name: string,
     email: string,
-    teacherId?: string
+    teacherId?: string,
+    studentId?: string
   ) => {
-    const user = { role, name, email, teacherId };
+    const user = { role, name, email, teacherId, studentId };
     setCurrentUser(user);
+    if (studentId) setActiveStudentId(studentId);
     localStorage.setItem("qs_auth_user", JSON.stringify(user));
   };
 
   const logout = () => {
     setCurrentUser(null);
+    setAdminPinInput("");
+    setTeacherPinInput("");
+    setSupervisorPinInput("");
+    setStudentSearchInput("");
+    setAuthError(null);
     localStorage.removeItem("qs_auth_user");
+  };
+
+  const handleAdminAuth = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const correctPin = settings.adminPin || "7860";
+    if (adminPinInput.trim() === correctPin.trim()) {
+      setAuthError(null);
+      setAdminPinInput("");
+      loginAs("admin", "Principal Admin", "admin@quranicskills.com");
+    } else {
+      setAuthError("❌ غلط ایڈمن پن کوڈ! (Incorrect Admin PIN) — ڈیفالٹ کوڈ: 7860");
+    }
+  };
+
+  const handleTeacherAuth = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const correctPin = settings.teacherPin || "1234";
+    if (teacherPinInput.trim() === correctPin.trim()) {
+      setAuthError(null);
+      setTeacherPinInput("");
+      const t = OFFICIAL_TEACHERS.find((x) => x.id === selectedLoginTeacherId) || OFFICIAL_TEACHERS[0];
+      loginAs("teacher", t.name, t.email, t.id);
+    } else {
+      setAuthError("❌ غلط ٹیچر پن کوڈ! (Incorrect Teacher PIN) — ڈیفالٹ کوڈ: 1234");
+    }
+  };
+
+  const handleSupervisorAuth = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const correctPin = settings.supervisorPin || "9900";
+    if (supervisorPinInput.trim() === correctPin.trim()) {
+      setAuthError(null);
+      setSupervisorPinInput("");
+      loginAs("supervisor", "Ustadh Tariq (QA Auditor)", "supervisor@quranicskills.com");
+    } else {
+      setAuthError("❌ غلط سپروائزر پن کوڈ! (Incorrect Supervisor PIN) — ڈیفالٹ کوڈ: 9900");
+    }
+  };
+
+  const handleStudentAuth = (targetStudentId?: string) => {
+    const query = (targetStudentId || selectedStudentLoginId || studentSearchInput).trim().toLowerCase();
+    if (!query) {
+      setAuthError("⚠️ براہ کرم طالب علم کا نام یا Student ID منتخب کریں۔");
+      return;
+    }
+    const found = students.find(
+      (s) =>
+        s.id.toLowerCase() === query ||
+        s.name.toLowerCase().includes(query) ||
+        query.includes(s.name.toLowerCase())
+    );
+    if (found) {
+      setAuthError(null);
+      setActiveStudentId(found.id);
+      loginAs("student", `${found.name} (${found.id})`, "student@quranicskills.com", undefined, found.id);
+    } else {
+      setAuthError("❌ طالب علم نہیں ملا! براہ کرم درست نام یا Student ID منتخب کریں۔");
+    }
   };
 
   // 1-Click WhatsApp Progress Report Sender
@@ -368,7 +450,7 @@ export default function RealLMSApp() {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center items-center p-4">
-        <div className="max-w-md w-full bg-slate-800 rounded-3xl p-8 border border-slate-700 shadow-2xl space-y-6">
+        <div className="max-w-md w-full bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-2xl space-y-6">
           <div className="text-center space-y-3">
             <div className="w-20 h-20 rounded-2xl bg-black border border-emerald-500/40 p-1 mx-auto shadow-xl shadow-emerald-950/60 overflow-hidden flex items-center justify-center">
               <img src="/logo.qs.jpeg" alt="Quranic Skills Logo" className="w-full h-full object-contain rounded-xl" />
@@ -378,53 +460,148 @@ export default function RealLMSApp() {
               <p className="text-xs text-emerald-400 font-medium mt-0.5">{settings.tagline}</p>
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 mt-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Next.js 15 Full-Stack Backend Live</span>
+              <Lock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Secure Passcode-Protected Portals</span>
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 text-center">
-              Select Your Role to Access Portal:
-            </p>
-
+          {/* Role Selection Tabs */}
+          <div className="grid grid-cols-4 gap-1 p-1 bg-slate-900/80 rounded-2xl border border-slate-700">
             <button
-              onClick={() => loginAs("admin", "Principal Admin", "admin@quranicskills.com")}
-              className="w-full p-3.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-200 font-bold flex items-center justify-between transition-all"
+              type="button"
+              onClick={() => {
+                setActiveLoginRole("admin");
+                setAuthError(null);
+              }}
+              className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all ${
+                activeLoginRole === "admin"
+                  ? "bg-purple-600 text-white shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
             >
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-purple-400" />
-                <div className="text-left">
-                  <div className="text-sm font-bold text-white">Super Admin Portal</div>
-                  <div className="text-[11px] text-purple-300">Enrollment, Fees & Bank Settings</div>
-                </div>
-              </div>
-              <span className="text-xs px-2 py-0.5 rounded bg-purple-500/30 text-purple-200">Login →</span>
+              👑 Admin
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveLoginRole("teacher");
+                setAuthError(null);
+              }}
+              className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all ${
+                activeLoginRole === "teacher"
+                  ? "bg-emerald-600 text-white shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              👨‍🏫 Teacher
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveLoginRole("supervisor");
+                setAuthError(null);
+              }}
+              className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all ${
+                activeLoginRole === "supervisor"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              👁️ Supervisor
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveLoginRole("student");
+                setAuthError(null);
+              }}
+              className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all ${
+                activeLoginRole === "student"
+                  ? "bg-amber-600 text-white shadow-md"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🎓 Student
+            </button>
+          </div>
 
-            {/* Official Teacher Portal Login */}
-            <div className="p-3.5 rounded-xl bg-emerald-600/20 border border-emerald-500/40 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <GraduationCap className="w-5 h-5 text-emerald-400" />
-                  <div className="text-left">
-                    <div className="text-sm font-bold text-white">Faculty & Teacher Portal</div>
-                    <div className="text-[11px] text-emerald-300">11 Official Academy Teachers</div>
+          {/* Error Message */}
+          {authError && (
+            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-600/50 text-rose-200 text-xs font-bold flex items-center gap-2 animate-shake">
+              <span>⚠️</span>
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {/* TAB 1: SUPER ADMIN LOGIN */}
+          {activeLoginRole === "admin" && (
+            <form onSubmit={handleAdminAuth} className="space-y-4">
+              <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-5 h-5 text-purple-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Super Admin Access</h3>
+                    <p className="text-[11px] text-purple-300">Confidential directory, fees, bank accounts & PIN settings</p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-200">
-                  8 Male • 3 Female
-                </span>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Enter Admin Passcode / PIN (ایڈمن کوڈ):
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={adminPinInput}
+                      onChange={(e) => setAdminPinInput(e.target.value)}
+                      placeholder="••••"
+                      autoFocus
+                      required
+                      className="w-full bg-slate-900 border border-purple-500/50 rounded-xl px-3 py-2.5 text-white font-mono text-base tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 px-1 pt-0.5">
+                    <span>Default PIN: <strong className="text-purple-300 font-mono">7860</strong></span>
+                    <span>Admin Only</span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                  Select Faculty Member to Log In:
-                </label>
-                <div className="flex gap-2">
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-950/60 transition-all flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Verify PIN & Enter Super Admin</span>
+              </button>
+            </form>
+          )}
+
+          {/* TAB 2: FACULTY & TEACHER LOGIN */}
+          {activeLoginRole === "teacher" && (
+            <form onSubmit={handleTeacherAuth} className="space-y-4">
+              <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <GraduationCap className="w-5 h-5 text-emerald-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Faculty & Teacher Login</h3>
+                    <p className="text-[11px] text-emerald-300">11 Official Teachers • Mark Sabaq & Attendance</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="block text-xs font-bold text-slate-300">Select Your Teacher Profile:</label>
                   <select
                     value={selectedLoginTeacherId}
                     onChange={(e) => setSelectedLoginTeacherId(e.target.value)}
-                    className="flex-1 bg-slate-900 border border-emerald-500/50 text-white text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                    className="w-full bg-slate-900 border border-emerald-500/50 text-white text-xs rounded-xl p-2.5 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-400"
                   >
                     <optgroup label="👨‍🏫 Male Teachers (8)">
                       {OFFICIAL_TEACHERS.filter((t) => t.gender === "Male").map((t) => (
@@ -441,47 +618,165 @@ export default function RealLMSApp() {
                       ))}
                     </optgroup>
                   </select>
-                  <button
-                    onClick={() => {
-                      const t = OFFICIAL_TEACHERS.find((x) => x.id === selectedLoginTeacherId) || OFFICIAL_TEACHERS[0];
-                      loginAs("teacher", t.name, t.email, t.id);
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Enter Teacher Passcode / PIN (ٹیچر پن کوڈ):
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={teacherPinInput}
+                      onChange={(e) => setTeacherPinInput(e.target.value)}
+                      placeholder="••••"
+                      required
+                      className="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-3 py-2.5 text-white font-mono text-base tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 px-1 pt-0.5">
+                    <span>Default PIN: <strong className="text-emerald-300 font-mono">1234</strong></span>
+                    <span>Faculty Shield Active</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-950/60 transition-all flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Verify PIN & Enter Teacher Portal</span>
+              </button>
+            </form>
+          )}
+
+          {/* TAB 3: SUPERVISOR LOGIN */}
+          {activeLoginRole === "supervisor" && (
+            <form onSubmit={handleSupervisorAuth} className="space-y-4">
+              <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-500/30 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Eye className="w-5 h-5 text-blue-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Quality Supervisor Portal</h3>
+                    <p className="text-[11px] text-blue-300">Tajweed Audits & Classroom Scorecards</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Enter Supervisor Passcode / PIN:
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={supervisorPinInput}
+                      onChange={(e) => setSupervisorPinInput(e.target.value)}
+                      placeholder="••••"
+                      required
+                      className="w-full bg-slate-900 border border-blue-500/50 rounded-xl px-3 py-2.5 text-white font-mono text-base tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 px-1 pt-0.5">
+                    <span>Default PIN: <strong className="text-blue-300 font-mono">9900</strong></span>
+                    <span>Auditor Access</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-950/60 transition-all flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Verify PIN & Enter Supervisor Portal</span>
+              </button>
+            </form>
+          )}
+
+          {/* TAB 4: STUDENT & PARENT LOGIN */}
+          {activeLoginRole === "student" && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Users className="w-5 h-5 text-amber-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Student & Parent Portal</h3>
+                    <p className="text-[11px] text-amber-300">View daily Quran sabaq, Zoom classroom & fee voucher</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Select Enrolled Student (127 Students):
+                  </label>
+                  <select
+                    value={selectedStudentLoginId}
+                    onChange={(e) => {
+                      setSelectedStudentLoginId(e.target.value);
+                      setStudentSearchInput(e.target.value);
                     }}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow whitespace-nowrap transition-all"
+                    className="w-full bg-slate-900 border border-amber-500/50 text-white text-xs rounded-xl p-2.5 font-medium focus:outline-none focus:ring-1 focus:ring-amber-400"
                   >
-                    Login →
-                  </button>
+                    <option value="">-- Choose Enrolled Student --</option>
+                    {students.slice(0, 50).map((st) => (
+                      <option key={st.id} value={st.id}>
+                        {st.id} • {st.name} ({st.timeSlot})
+                      </option>
+                    ))}
+                    {students.length > 50 && (
+                      <optgroup label="More Students...">
+                        {students.slice(50).map((st) => (
+                          <option key={st.id} value={st.id}>
+                            {st.id} • {st.name} ({st.timeSlot})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-300">
+                    Or Type Student Name / ID:
+                  </label>
+                  <input
+                    type="text"
+                    value={studentSearchInput}
+                    onChange={(e) => setStudentSearchInput(e.target.value)}
+                    placeholder="e.g. QSK-STU-001 or Arzoo Wazir"
+                    className="w-full bg-slate-900 border border-amber-500/50 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:ring-1 focus:ring-amber-400"
+                  />
+                  <p className="text-[10px] text-amber-200/80">
+                    Parents can only view their own student&apos;s recitation progress &amp; voucher.
+                  </p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleStudentAuth()}
+                className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-950/60 transition-all flex items-center justify-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                <span>Open Student Dashboard →</span>
+              </button>
             </div>
-
-            <button
-              onClick={() => loginAs("supervisor", "Ustadh Tariq (QA Auditor)", "supervisor@quranicskills.com")}
-              className="w-full p-3.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-200 font-bold flex items-center justify-between transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <Eye className="w-5 h-5 text-blue-400" />
-                <div className="text-left">
-                  <div className="text-sm font-bold text-white">Quality Supervisor Portal</div>
-                  <div className="text-[11px] text-blue-300">Class Audits & 4-Rubric Scorecards</div>
-                </div>
-              </div>
-              <span className="text-xs px-2 py-0.5 rounded bg-blue-500/30 text-blue-200">Login →</span>
-            </button>
-
-            <button
-              onClick={() => loginAs("student", "Abdullah Khan (Student)", "student@quranicskills.com")}
-              className="w-full p-3.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-200 font-bold flex items-center justify-between transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-amber-400" />
-                <div className="text-left">
-                  <div className="text-sm font-bold text-white">Student & Parent Portal</div>
-                  <div className="text-[11px] text-amber-300">Daily Sabaq, Recordings & Fee Voucher</div>
-                </div>
-              </div>
-              <span className="text-xs px-2 py-0.5 rounded bg-amber-500/30 text-amber-200">Login →</span>
-            </button>
-          </div>
+          )}
 
           <div className="pt-2 text-center text-[11px] text-slate-500 border-t border-slate-700/60">
             Quranic Skills Academy • Next.js 15 & Prisma Enterprise LMS
@@ -566,63 +861,85 @@ export default function RealLMSApp() {
       {/* ========================================================================= */}
       {/* ROLE SWITCHER NAVIGATION BAR */}
       {/* ========================================================================= */}
-      <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-2 sm:space-x-6 overflow-x-auto py-2">
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "admin" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "admin"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 text-purple-600" />
-                <span>Super Admin</span>
-              </button>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "teacher" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "teacher"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <GraduationCap className="w-4 h-4 text-emerald-600" />
-                <span>Teacher Portal</span>
-              </button>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "supervisor" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "supervisor"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <Eye className="w-4 h-4 text-blue-600" />
-                <span>Supervisor Portal</span>
-              </button>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "student" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "student"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <Users className="w-4 h-4 text-amber-600" />
-                <span>Student & Fee Portal</span>
-              </button>
-            </div>
+      {currentUser.email === "admin@quranicskills.com" ? (
+        <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2 sm:space-x-6 overflow-x-auto py-2">
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "admin" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "admin"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>Super Admin</span>
+                </button>
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "teacher" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "teacher"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4 text-emerald-600" />
+                  <span>Teacher Portal (Preview)</span>
+                </button>
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "supervisor" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "supervisor"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <Eye className="w-4 h-4 text-blue-600" />
+                  <span>Supervisor Portal</span>
+                </button>
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "student" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "student"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-amber-600" />
+                  <span>Student & Fee Portal</span>
+                </button>
+              </div>
 
-            <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-emerald-800 font-bold">Real Full-Stack Server Online</span>
+              <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-emerald-800 font-bold">Admin Master Session</span>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      ) : (
+        <nav className="bg-slate-900 border-b border-slate-800 text-white py-2 px-4 sm:px-8 sticky top-16 z-40">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold">
+              <Lock className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-emerald-300">
+                {currentUser.role === "teacher" && `👨‍🏫 Teacher Portal: ${currentUser.name}`}
+                {currentUser.role === "supervisor" && `👁️ QA Supervisor Portal: ${currentUser.name}`}
+                {currentUser.role === "student" && `🎓 Student Portal: ${currentUser.name}`}
+              </span>
+            </div>
+            <button
+              onClick={logout}
+              className="text-xs font-bold text-rose-300 hover:text-rose-100 bg-rose-950/80 px-3 py-1 rounded-lg border border-rose-800/60 transition-all flex items-center gap-1.5"
+            >
+              <LogOut className="w-3 h-3" />
+              <span>Sign Out / لاگ آؤٹ</span>
+            </button>
+          </div>
+        </nav>
+      )}
 
       {/* ========================================================================= */}
       {/* MAIN CONTENT AREA */}
@@ -2795,11 +3112,14 @@ export default function RealLMSApp() {
                   bankIBAN: (form.elements.namedItem("setBankIBAN") as HTMLInputElement).value,
                   easyPaisa: (form.elements.namedItem("setEasyPaisa") as HTMLInputElement).value,
                   jazzCash: (form.elements.namedItem("setJazzCash") as HTMLInputElement).value,
-                  overseasNote: (form.elements.namedItem("setOverseas") as HTMLInputElement).value
+                  overseasNote: (form.elements.namedItem("setOverseas") as HTMLInputElement).value,
+                  adminPin: (form.elements.namedItem("setAdminPin") as HTMLInputElement)?.value || settings.adminPin || "7860",
+                  teacherPin: (form.elements.namedItem("setTeacherPin") as HTMLInputElement)?.value || settings.teacherPin || "1234",
+                  supervisorPin: (form.elements.namedItem("setSupervisorPin") as HTMLInputElement)?.value || settings.supervisorPin || "9900"
                 };
                 saveAcademySettings(newSettings);
                 setIsSettingsOpen(false);
-                alert("✅ Bank accounts and academy details updated successfully!");
+                alert("✅ Bank accounts, academy details, and security PINs updated successfully!");
               }}
               className="space-y-3.5 text-xs sm:text-sm"
             >
@@ -2828,6 +3148,55 @@ export default function RealLMSApp() {
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Official Billing Email</label>
                     <input name="setEmail" defaultValue={settings.email} className="w-full border p-2.5 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Portal Security Passcodes */}
+              <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2.5">
+                <div className="flex items-center gap-1.5 font-bold text-xs uppercase text-purple-950">
+                  <Lock className="w-3.5 h-3.5 text-purple-700" />
+                  <span>Portal Security PIN Codes (پورٹل پاس ورڈز)</span>
+                </div>
+                <p className="text-[11px] text-purple-800">
+                  Set secret PINs for Super Admin, Faculty, and Quality Supervisor portals:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 text-xs mb-1">
+                      Super Admin PIN *
+                    </label>
+                    <input
+                      name="setAdminPin"
+                      required
+                      defaultValue={settings.adminPin || "7860"}
+                      className="w-full border border-purple-300 p-2 rounded-xl font-mono font-bold text-center text-slate-900 bg-white"
+                    />
+                    <span className="text-[10px] text-slate-500">Default: 7860</span>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 text-xs mb-1">
+                      Teacher Portal PIN *
+                    </label>
+                    <input
+                      name="setTeacherPin"
+                      required
+                      defaultValue={settings.teacherPin || "1234"}
+                      className="w-full border border-purple-300 p-2 rounded-xl font-mono font-bold text-center text-slate-900 bg-white"
+                    />
+                    <span className="text-[10px] text-slate-500">Default: 1234</span>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 text-xs mb-1">
+                      Supervisor PIN *
+                    </label>
+                    <input
+                      name="setSupervisorPin"
+                      required
+                      defaultValue={settings.supervisorPin || "9900"}
+                      className="w-full border border-purple-300 p-2 rounded-xl font-mono font-bold text-center text-slate-900 bg-white"
+                    />
+                    <span className="text-[10px] text-slate-500">Default: 9900</span>
                   </div>
                 </div>
               </div>
