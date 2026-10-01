@@ -1,0 +1,474 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// 1. ENUMS
+// ============================================================================
+
+enum UserRole {
+  SUPER_ADMIN
+  TEACHER
+  SUPERVISOR
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  ARCHIVED
+}
+
+enum LessonType {
+  VIDEO
+  PDF
+  RICH_TEXT
+  QUIZ
+  LIVE_STREAM
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  STRIPE
+  PAYPAL
+  BANK_TRANSFER
+  CASH
+  LOCAL_WALLET
+}
+
+enum PaymentVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+  LATE
+}
+
+enum SupervisionReportStatus {
+  DRAFT
+  SUBMITTED
+  ACKNOWLEDGED
+}
+
+// ============================================================================
+// 2. USER & PROFILE MODELS
+// ============================================================================
+
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  passwordHash      String
+  role              UserRole
+  firstName         String
+  lastName          String
+  phone             String?
+  avatarUrl         String?
+  timezone          String       @default("UTC")
+  locale            String       @default("en")
+  status            UserStatus   @default(ACTIVE)
+  lastLoginAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  // Profile relations
+  teacherProfile    TeacherProfile?
+  studentProfile    StudentProfile?
+
+  // Academic & Class relations
+  createdCourses    Course[]             @relation("CourseCreator")
+  taughtBatches     Batch[]              @relation("BatchTeacher")
+  supervisedBatches Batch[]              @relation("BatchSupervisor")
+  enrollments       BatchEnrollment[]
+
+  // Attendance & Supervision
+  taughtSessions    AttendanceSession[]  @relation("SessionTeacher")
+  attendanceRecords AttendanceRecord[]
+  supervisedReports SupervisionReport[]  @relation("SupervisorReports")
+  receivedReports   SupervisionReport[]  @relation("TeacherReports")
+
+  // Fee & Billing relations
+  feeAssignments    StudentFeeAssignment[]
+  invoices          Invoice[]            @relation("StudentInvoices")
+  paymentsMade      Payment[]            @relation("StudentPayments")
+  paymentsVerified  Payment[]            @relation("PaymentVerifier")
+
+  // Assignments
+  createdAssignments Assignment[]       @relation("TeacherAssignments")
+  submissions        AssignmentSubmission[]
+  gradedAssignments  AssignmentGrade[]    @relation("TeacherGrades")
+
+  // System
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+
+  @@index([role, status])
+  @@index([email])
+}
+
+model TeacherProfile {
+  userId         String    @id
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qualification  String?
+  bio            String?
+  hourlyRate     Decimal?  @db.Decimal(10, 2)
+  specialization String[]
+  createdAt      DateTime  @default(now())
+}
+
+model StudentProfile {
+  userId            String    @id
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studentIdCode     String    @unique
+  guardianName      String?
+  guardianPhone     String?
+  guardianEmail     String?
+  dateOfBirth       DateTime? @db.Date
+  address           String?
+  preferredCurrency String    @default("USD")
+  createdAt         DateTime  @default(now())
+}
+
+// ============================================================================
+// 3. ACADEMIC & COURSE MANAGEMENT
+// ============================================================================
+
+model AcademicTerm {
+  id        String    @id @default(uuid())
+  title     String
+  startDate DateTime  @db.Date
+  endDate   DateTime  @db.Date
+  isActive  Boolean   @default(false)
+  batches   Batch[]
+  createdAt DateTime  @default(now())
+}
+
+model Course {
+  id          String         @id @default(uuid())
+  title       String
+  slug        String         @unique
+  courseCode  String         @unique
+  description String?
+  thumbnailUrl String?
+  level       String         @default("Beginner")
+  isPublished Boolean        @default(false)
+  createdById String?
+  createdBy   User?          @relation("CourseCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  modules     CourseModule[]
+  batches     Batch[]
+  feePlans    FeePlan[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model CourseModule {
+  id         String    @id @default(uuid())
+  courseId   String
+  course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title      String
+  orderIndex Int       @default(1)
+  lessons    Lesson[]
+  createdAt  DateTime  @default(now())
+}
+
+model Lesson {
+  id                   String              @id @default(uuid())
+  moduleId             String
+  module               CourseModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title                String
+  contentType          LessonType
+  contentBody          String?             @db.Text
+  mediaUrl             String?
+  mediaDurationSeconds Int?
+  fileSizeBytes        BigInt?
+  isPreview            Boolean             @default(false)
+  orderIndex           Int                 @default(1)
+  attendanceSessions   AttendanceSession[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model Batch {
+  id               String               @id @default(uuid())
+  courseId         String
+  course           Course               @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  termId           String?
+  term             AcademicTerm?        @relation(fields: [termId], references: [id], onDelete: SetNull)
+  name             String
+  teacherId        String?
+  teacher          User?                @relation("BatchTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+  supervisorId     String?
+  supervisor       User?                @relation("BatchSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  meetingLink      String?
+  classDays        String[]
+  startTime        String               // Format: "HH:mm"
+  endTime          String               // Format: "HH:mm"
+  capacity         Int                  @default(30)
+  isActive         Boolean              @default(true)
+  enrollments      BatchEnrollment[]
+  attendanceSessions AttendanceSession[]
+  supervisionReports SupervisionReport[]
+  feeAssignments   StudentFeeAssignment[]
+  invoices         Invoice[]
+  assignments      Assignment[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+}
+
+model BatchEnrollment {
+  id         String   @id @default(uuid())
+  batchId    String
+  batch      Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status     String   @default("active") // active, dropped, completed
+  enrolledAt DateTime @default(now())
+
+  @@unique([batchId, studentId])
+}
+
+// ============================================================================
+// 4. ATTENDANCE & SUPERVISION TRACKING
+// ============================================================================
+
+model AttendanceSession {
+  id                 String             @id @default(uuid())
+  batchId            String
+  batch              Batch              @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  teacherId          String
+  teacher            User               @relation("SessionTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  sessionDate        DateTime           @db.Date
+  startTime          DateTime?
+  endTime            DateTime?
+  lessonId           String?
+  lesson             Lesson?            @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  topicCovered       String?            @db.Text
+  teacherNotes       String?            @db.Text
+  records            AttendanceRecord[]
+  supervisionReport  SupervisionReport?
+  createdAt          DateTime           @default(now())
+
+  @@unique([batchId, sessionDate])
+}
+
+model AttendanceRecord {
+  id          String           @id @default(uuid())
+  sessionId   String
+  session     AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status      AttendanceStatus @default(ABSENT)
+  arrivalTime String?          // Format: "HH:mm"
+  remarks     String?
+  createdAt   DateTime         @default(now())
+
+  @@unique([sessionId, studentId])
+  @@index([studentId, status])
+}
+
+model SupervisionReport {
+  id                      String                  @id @default(uuid())
+  batchId                 String
+  batch                   Batch                   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  attendanceSessionId     String?                 @unique
+  attendanceSession       AttendanceSession?      @relation(fields: [attendanceSessionId], references: [id], onDelete: SetNull)
+  supervisorId            String
+  supervisor              User                    @relation("SupervisorReports", fields: [supervisorId], references: [id], onDelete: Restrict)
+  teacherId               String
+  teacher                 User                    @relation("TeacherReports", fields: [teacherId], references: [id], onDelete: Restrict)
+  observationDate         DateTime                @db.Date
+  punctualityScore        Int                     // 1 to 5
+  curriculumDeliveryScore Int                     // 1 to 5
+  studentEngagementScore  Int                     // 1 to 5
+  classroomControlScore   Int                     // 1 to 5
+  keyStrengths            String?                 @db.Text
+  areasForImprovement     String?                 @db.Text
+  actionItems             String?                 @db.Text
+  status                  SupervisionReportStatus @default(SUBMITTED)
+  teacherAcknowledgementNote String?              @db.Text
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([teacherId, observationDate])
+}
+
+// ============================================================================
+// 5. MULTI-CURRENCY FEE MANAGEMENT SYSTEM
+// ============================================================================
+
+model FeePlan {
+  id              String                 @id @default(uuid())
+  courseId        String?
+  course          Course?                @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  title           String
+  currency        String                 // USD, EUR, GBP, PKR, SAR, AED
+  amount          Decimal                @db.Decimal(12, 2)
+  billingInterval String                 @default("monthly") // monthly, quarterly, one_time
+  isActive        Boolean                @default(true)
+  assignments     StudentFeeAssignment[]
+  createdAt       DateTime               @default(now())
+}
+
+model StudentFeeAssignment {
+  id                       String   @id @default(uuid())
+  studentId                String
+  student                  User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  batchId                  String
+  batch                    Batch    @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  feePlanId                String
+  feePlan                  FeePlan  @relation(fields: [feePlanId], references: [id], onDelete: Restrict)
+  customDiscountPercentage Decimal  @default(0.00) @db.Decimal(5, 2)
+  createdAt                DateTime @default(now())
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  invoiceNumber  String        @unique // e.g. "INV-2026-00120"
+  studentId      String
+  student        User          @relation("StudentInvoices", fields: [studentId], references: [id], onDelete: Restrict)
+  batchId        String?
+  batch          Batch?        @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  billingMonth   DateTime      @db.Date
+  currency       String        // USD, EUR, GBP, PKR, SAR, AED
+  baseAmount     Decimal       @db.Decimal(12, 2)
+  discountAmount Decimal       @default(0.00) @db.Decimal(12, 2)
+  lateFee        Decimal       @default(0.00) @db.Decimal(12, 2)
+  totalDue       Decimal       @db.Decimal(12, 2)
+  totalPaid      Decimal       @default(0.00) @db.Decimal(12, 2)
+  dueDate        DateTime      @db.Date
+  status         InvoiceStatus @default(UNPAID)
+  notes          String?       @db.Text
+  payments       Payment[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([studentId, status])
+  @@index([dueDate, status])
+}
+
+model Payment {
+  id                    String                    @id @default(uuid())
+  invoiceId             String
+  invoice               Invoice                   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  studentId             String
+  student               User                      @relation("StudentPayments", fields: [studentId], references: [id], onDelete: Restrict)
+  paymentMethod         PaymentMethod
+  amount                Decimal                   @db.Decimal(12, 2)
+  currency              String
+  exchangeRateToBase    Decimal                   @default(1.0000) @db.Decimal(10, 4)
+  transactionReference  String?
+  receiptAttachmentUrl  String?
+  verificationStatus    PaymentVerificationStatus @default(APPROVED)
+  verifiedById          String?
+  verifiedBy            User?                     @relation("PaymentVerifier", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedAt            DateTime?
+  paidAt                DateTime                  @default(now())
+  createdAt             DateTime                  @default(now())
+
+  @@index([invoiceId])
+  @@index([studentId])
+}
+
+// ============================================================================
+// 6. ASSIGNMENTS & ASSESSMENT PORTAL
+// ============================================================================
+
+model Assignment {
+  id                   String                 @id @default(uuid())
+  batchId              String
+  batch                Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  teacherId            String
+  teacher              User                   @relation("TeacherAssignments", fields: [teacherId], references: [id], onDelete: Restrict)
+  title                String
+  description          String?                @db.Text
+  attachmentUrls       String[]
+  maxScore             Decimal                @default(100.00) @db.Decimal(5, 2)
+  dueDate              DateTime
+  allowLateSubmissions Boolean                @default(true)
+  submissions          AssignmentSubmission[]
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+}
+
+model AssignmentSubmission {
+  id             String            @id @default(uuid())
+  assignmentId   String
+  assignment     Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submissionText String?           @db.Text
+  submittedFiles String[]
+  status         SubmissionStatus  @default(SUBMITTED)
+  submittedAt    DateTime          @default(now())
+  grade          AssignmentGrade?
+
+  @@unique([assignmentId, studentId])
+}
+
+model AssignmentGrade {
+  id               String               @id @default(uuid())
+  submissionId     String               @unique
+  submission       AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  gradedById       String
+  gradedBy         User                 @relation("TeacherGrades", fields: [gradedById], references: [id], onDelete: Restrict)
+  scoreObtained    Decimal              @db.Decimal(5, 2)
+  rubricFeedback   Json?                // JSON criteria: { "pronunciation": 90, "memorization": 85 }
+  teacherFeedback  String?              @db.Text
+  audioFeedbackUrl String?
+  gradedAt         DateTime             @default(now())
+}
+
+// ============================================================================
+// 7. AUDIT LOGS & NOTIFICATIONS
+// ============================================================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   // e.g. "PAYMENT_VERIFIED", "ATTENDANCE_MODIFIED"
+  entityName String
+  entityId   String
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityName, entityId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String   @db.Text
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}

@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quranic Skills Academy - Learning Management System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .tab-active { border-bottom: 3px solid #059669; color: #059669; font-weight: 700; }
+    
+    @media print {
+      body * { visibility: hidden; }
+      #printableVoucher, #printableVoucher * { visibility: visible; }
+      #printableVoucher { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- ========================================== -->
+  <!-- TOP APP BAR -->
+  <!-- ========================================== -->
+  <header class="bg-emerald-800 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <div class="w-11 h-11 rounded-xl bg-black border border-emerald-500/40 p-0.5 shadow-md flex items-center justify-center overflow-hidden shrink-0">
+            <img src="asset/logo.qs.jpeg" alt="Quranic Skills Logo" class="w-full h-full object-contain rounded-lg">
+          </div>
+          <div>
+            <h1 id="headerAcademyName" class="font-bold text-base sm:text-lg leading-tight">Quranic Skills Academy</h1>
+            <p id="headerTagline" class="text-xs text-emerald-200">Global Online Quran & Arabic Learning Institute</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-emerald-700/80 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold border border-emerald-500 shadow flex items-center gap-1.5 transition-all">
+            <span>⚙️</span> <span class="hidden sm:inline">Bank & Academy Settings</span>
+          </button>
+          <button onclick="openAdmissionModal()" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 rounded-lg text-xs font-bold shadow flex items-center gap-1.5 transition-all">
+            <span>➕</span> <span>New Admission</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- NAVIGATION TABS -->
+  <!-- ========================================== -->
+  <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between">
+        <div class="flex space-x-2 sm:space-x-8 overflow-x-auto py-2">
+          <button onclick="switchRole('admin')" id="tab-admin" class="tab-btn px-4 py-2 text-sm font-semibold flex items-center gap-2 rounded-lg transition-all tab-active">
+            👑 <span>Super Admin</span>
+          </button>
+          <button onclick="switchRole('teacher')" id="tab-teacher" class="tab-btn px-4 py-2 text-sm font-semibold flex items-center gap-2 rounded-lg text-slate-600 hover:text-emerald-700 transition-all">
+            👨‍🏫 <span>Teacher Portal</span>
+          </button>
+          <button onclick="switchRole('supervisor')" id="tab-supervisor" class="tab-btn px-4 py-2 text-sm font-semibold flex items-center gap-2 rounded-lg text-slate-600 hover:text-emerald-700 transition-all">
+            👁️ <span>Supervisor Portal</span>
+          </button>
+          <button onclick="switchRole('student')" id="tab-student" class="tab-btn px-4 py-2 text-sm font-semibold flex items-center gap-2 rounded-lg text-slate-600 hover:text-emerald-700 transition-all">
+            🎓 <span>Student & Fee Portal</span>
+          </button>
+        </div>
+        <div class="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="currentUserLabel" class="text-emerald-800 font-bold">Super Admin Portal View</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- MAIN CONTAINER -->
+  <!-- ========================================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ================================================================= -->
+    <!-- 1. SUPER ADMIN VIEW -->
+    <!-- ================================================================= -->
+    <div id="view-admin" class="role-view space-y-6">
+      
+      <!-- Key Performance Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase">Total Students</p>
+              <h3 id="statTotalStudents" class="text-2xl font-extrabold text-slate-900 mt-1">0</h3>
+            </div>
+            <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl text-lg">🎓</span>
+          </div>
+          <div id="statClassDistribution" class="mt-3 text-xs text-slate-500">
+            0 1-on-1 • 0 Group Students
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase">Configured Bank</p>
+              <h3 id="statBankName" class="text-lg font-extrabold text-slate-900 mt-1 truncate">Meezan Bank Ltd</h3>
+            </div>
+            <span class="p-2.5 bg-blue-50 text-blue-600 rounded-xl text-lg">🏦</span>
+          </div>
+          <div id="statAccountTitle" class="mt-3 text-xs text-slate-500 font-medium truncate">
+            Title: Quranic Skills Academy
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase">Total Fee Collected</p>
+              <h3 id="statTotalRevenue" class="text-2xl font-extrabold text-emerald-700 mt-1">$0</h3>
+            </div>
+            <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl text-lg">💵</span>
+          </div>
+          <div class="mt-3 text-xs text-slate-500 font-medium">
+            Multi-Currency (USD, GBP, PKR, SAR)
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase">Supervisor Audits</p>
+              <h3 id="statTotalReports" class="text-2xl font-extrabold text-purple-700 mt-1">0</h3>
+            </div>
+            <span class="p-2.5 bg-purple-50 text-purple-600 rounded-xl text-lg">📋</span>
+          </div>
+          <div class="mt-3 text-xs text-slate-500 font-medium">
+            Quality Inspection Scorecards
+          </div>
+        </div>
+      </div>
+
+      <!-- Students & Fee Ledger -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-lg text-slate-900">Student Directory & Fee Management Ledger</h3>
+            <p class="text-xs text-slate-500">Track students with Age, Timezone, Teacher, Recording Permissions, and Tuition Status</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openSettingsModal()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5">
+              <span>⚙️</span> <span>Configure Bank & Accounts</span>
+            </button>
+            <button onclick="openAdmissionModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1.5">
+              <span>➕</span> <span>Enroll New Student</span>
+            </button>
+            <button onclick="clearAllData()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold">
+              🗑️ Clear Ledger
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold text-xs uppercase">
+                <th class="py-3 px-4">Roll No</th>
+                <th class="py-3 px-4">Student & Age</th>
+                <th class="py-3 px-4">Guardian & Country</th>
+                <th class="py-3 px-4">Mode, Slot & Timezone</th>
+                <th class="py-3 px-4">Days & Teacher</th>
+                <th class="py-3 px-4">Current Sabaq</th>
+                <th class="py-3 px-4">Recording Policy</th>
+                <th class="py-3 px-4">Fee Status</th>
+                <th class="py-3 px-4 text-center">Voucher</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="adminStudentsTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- 2. TEACHER PORTAL -->
+    <!-- ================================================================= -->
+    <div id="view-teacher" class="role-view hidden space-y-6">
+      
+      <!-- Teacher Header Banner -->
+      <div class="bg-gradient-to-r from-emerald-800 to-teal-800 rounded-2xl p-6 text-white shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span class="px-2.5 py-1 bg-white/20 text-white rounded-md text-xs font-bold uppercase tracking-wider">Instructor Portal</span>
+          <h2 class="text-2xl font-bold mt-2">Assigned Student Sessions & Timetable</h2>
+          <p class="text-sm text-emerald-100 mt-1">Live recording privacy warnings are highlighted on each student slot</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <a href="https://us05web.zoom.us/j/2843243400?pwd=NHhHY204bnRXazJtaHdBTndBZVI2dz09" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow flex items-center gap-1.5 transition-all">
+            <span>📹</span> <span>Launch Official Zoom</span>
+          </a>
+          <div class="text-[10px] text-emerald-100 bg-emerald-950/70 px-2.5 py-1 rounded-lg border border-emerald-500/30 font-mono">
+            <span>ID: 284 324 3400</span> • <span>Pass: 72820</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule Timetable & Attendance -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="font-bold text-base text-slate-900">Today's Class Schedule (Date: <span id="currentDateDisplay"></span>)</h3>
+            <p class="text-xs text-slate-500">Notice the <strong class="text-rose-600">"🚫 Do NOT Record"</strong> badge for privacy-sensitive students</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="saveAttendanceSession()" class="text-xs font-bold px-4 py-1.5 bg-emerald-700 text-white rounded-lg shadow-sm hover:bg-emerald-800">
+              💾 Save Session Logs
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 font-bold text-xs uppercase">
+                <th class="py-2.5 px-3">Session & Time</th>
+                <th class="py-2.5 px-3">Student & Privacy Status</th>
+                <th class="py-2.5 px-3">Attendance</th>
+                <th class="py-2.5 px-3">Daily Quran Lesson (سبق، سبقی، منزل)</th>
+                <th class="py-2.5 px-3 text-right">Actions & WhatsApp</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100" id="teacherAttendanceTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Curriculum Logger -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 mt-4">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Today's General Lesson & Notes</label>
+          <input id="todayLessonCovered" type="text" placeholder="e.g. Makharij al-Huruf: Throat letters practice with Tajweed rules and articulation" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm font-medium">
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- 3. SUPERVISOR PORTAL -->
+    <!-- ================================================================= -->
+    <div id="view-supervisor" class="role-view hidden space-y-6">
+      <div class="bg-purple-900 text-white rounded-2xl p-6 shadow-md flex justify-between items-center">
+        <div>
+          <span class="px-2.5 py-1 bg-white/20 text-white rounded-md text-xs font-bold uppercase tracking-wider">Quality Assurance</span>
+          <h2 class="text-2xl font-bold mt-2">Class Inspection & Supervision Portal</h2>
+          <p class="text-xs sm:text-sm text-purple-200 mt-1">Audit 1-on-1 and Group classes, evaluate teacher pedagogy, and log inspection scorecards</p>
+        </div>
+      </div>
+
+      <!-- Inspection Scorecard Form -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="border-b border-slate-100 pb-3">
+          <h3 class="font-bold text-lg text-slate-900">Teacher Observation Scorecard</h3>
+          <p class="text-xs text-slate-500">Record scores across pedagogical and operational benchmarks</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Teacher / Instructor</label>
+            <select id="supTeacherName" class="w-full border border-slate-300 rounded-lg p-2 text-xs sm:text-sm font-medium bg-white">
+              <optgroup label="👨‍🏫 Male Teachers (8)">
+                <option value="Muallim Mufti Junaid Shams">QSK-EMP-001 — Muallim Mufti Junaid Shams</option>
+                <option value="Muallim Aryan Jahangir">QSK-EMP-002 — Muallim Aryan Jahangir</option>
+                <option value="Muallim Maulana Sami Ullah">QSK-EMP-003 — Muallim Maulana Sami Ullah</option>
+                <option value="Muallim Muhammad Ibrar">QSK-EMP-004 — Muallim Muhammad Ibrar</option>
+                <option value="Muallim Maulana Inzimam ul Haq">QSK-EMP-005 — Muallim Maulana Inzimam ul Haq</option>
+                <option value="Muallim Salim">QSK-EMP-006 — Muallim Salim</option>
+                <option value="Muallim Maulana Majid Ur Rehman">QSK-EMP-007 — Muallim Maulana Majid Ur Rehman</option>
+                <option value="Muallim Maulana Muhammad Afaq Ajmal">QSK-EMP-008 — Muallim Maulana Muhammad Afaq Ajmal</option>
+              </optgroup>
+              <optgroup label="👩‍🏫 Female Teachers (3)">
+                <option value="Mualima Zainab Riaz">QSK-EMP-009 — Mualima Zainab Riaz</option>
+                <option value="Mualima Sumayyah Riaz">QSK-EMP-010 — Mualima Sumayyah Riaz</option>
+                <option value="Mualima Faiza Riaz">QSK-EMP-011 — Mualima Faiza Riaz</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Class Type</label>
+            <select id="supBatchName" class="w-full border border-slate-300 rounded-lg p-2 text-xs sm:text-sm font-medium bg-white">
+              <option>1-on-1 Individual Session</option>
+              <option>Group Cohort Batch</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Inspection Date</label>
+            <input id="supDate" type="date" class="w-full border border-slate-300 rounded-lg p-2 text-xs sm:text-sm font-medium">
+          </div>
+        </div>
+
+        <!-- 1-5 Star Ratings -->
+        <div class="space-y-4 pt-2">
+          <h4 class="font-bold text-sm text-slate-800">Scoring Rubrics (1 = Poor, 5 = Excellent)</h4>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-slate-900">Punctuality & Schedule Adherence</div>
+                <div class="text-[11px] text-slate-500">Started on time matching student timezone slot</div>
+              </div>
+              <select id="scorePunctuality" class="border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white text-emerald-700">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                <option value="3">⭐⭐⭐ (3/5)</option>
+                <option value="2">⭐⭐ (2/5)</option>
+                <option value="1">⭐ (1/5)</option>
+              </select>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-slate-900">Curriculum & Tajweed Delivery</div>
+                <div class="text-[11px] text-slate-500">Accurate pronunciation correction and explanation</div>
+              </div>
+              <select id="scoreDelivery" class="border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white text-emerald-700">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                <option value="3">⭐⭐⭐ (3/5)</option>
+                <option value="2">⭐⭐ (2/5)</option>
+                <option value="1">⭐ (1/5)</option>
+              </select>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-slate-900">Student Engagement & Attention</div>
+                <div class="text-[11px] text-slate-500">Consistent interactive recitation and practice</div>
+              </div>
+              <select id="scoreEngagement" class="border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white text-emerald-700">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                <option value="3">⭐⭐⭐ (3/5)</option>
+                <option value="2">⭐⭐ (2/5)</option>
+                <option value="1">⭐ (1/5)</option>
+              </select>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center">
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-slate-900">Teacher Demeanor & Patience</div>
+                <div class="text-[11px] text-slate-500">Encouraging attitude, discipline, and warmth</div>
+              </div>
+              <select id="scoreControl" class="border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white text-emerald-700">
+                <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                <option value="3">⭐⭐⭐ (3/5)</option>
+                <option value="2">⭐⭐ (2/5)</option>
+                <option value="1">⭐ (1/5)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feedback notes -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Key Strengths Observed</label>
+            <textarea id="supStrengths" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs sm:text-sm" placeholder="e.g. Excellent articulation explanation; strictly respected parental privacy request."></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Action Items / Corrective Recommendations</label>
+            <textarea id="supImprovements" rows="2" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs sm:text-sm" placeholder="e.g. In case of 1-on-1 student delay, trigger the WhatsApp ping within 5 minutes."></textarea>
+          </div>
+        </div>
+
+        <button onclick="saveSupervisionReport()" class="w-full sm:w-auto px-6 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md">
+          💾 Save Inspection Report
+        </button>
+      </div>
+
+      <!-- Saved Reports History -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h3 class="font-bold text-base text-slate-900 mb-4">Historical Inspection Reports</h3>
+        <div id="supervisorReportsList" class="space-y-3">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- 4. STUDENT & FEE PORTAL -->
+    <!-- ================================================================= -->
+    <div id="view-student" class="role-view hidden space-y-6">
+      
+      <!-- Student Banner -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="space-y-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="activeStudentModeBadge" class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-md text-xs font-bold">1-on-1 Private Session</span>
+            <span id="activeStudentRecBadge" class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-bold">🎥 Recording: Standard</span>
+            <div class="flex items-center gap-1.5 ml-1">
+              <label for="studentPortalSelector" class="text-xs font-bold text-slate-500">Student Profile:</label>
+              <select id="studentPortalSelector" onchange="changeActiveStudent(this.value)" class="border border-emerald-400 bg-emerald-50 text-emerald-950 font-bold rounded-lg px-2.5 py-1 text-xs shadow-sm">
+                <!-- Dynamically populated -->
+              </select>
+            </div>
+          </div>
+          <h2 id="activeStudentTitle" class="text-2xl font-bold text-slate-900 mt-2">Course: Quranic Tajweed Essentials</h2>
+          <p id="activeStudentSubtitle" class="text-xs sm:text-sm text-slate-500 mt-1">Select or add a student to view enrolled materials and live fee vouchers</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="https://us05web.zoom.us/j/2843243400?pwd=NHhHY204bnRXazJtaHdBTndBZVI2dz09" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow flex items-center gap-1.5 transition-all">
+            <span>📹</span> <span>Join Official Zoom Class</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Lessons / Syllabus & Recordings -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- Daily Quran Lesson & Recitation Card (آج کا سبق و کارکردگی) -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800">📖 Daily Quran Progress</span>
+                  <span id="stCardDate" class="text-xs text-slate-500 font-medium">Recorded: Today</span>
+                </div>
+                <h3 class="font-bold text-base text-slate-900 mt-1">Today's Recitation, Sabaq & Performance</h3>
+              </div>
+              <div id="studentAttendanceBadgeContainer">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">✓ Present</span>
+              </div>
+            </div>
+
+            <!-- Dynamic Sabaq, Sabqi, Manzil & Grade display -->
+            <div id="studentQuranProgressCard">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <h3 class="font-bold text-base text-slate-900 border-b border-slate-100 pb-3">Course Curriculum & Learning Materials</h3>
+            
+            <div class="space-y-3">
+              <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">01</span>
+                  <div>
+                    <h4 class="font-bold text-xs sm:text-sm text-slate-900">Lesson 1: Points of Articulation Overview</h4>
+                    <p class="text-[11px] text-slate-500">Curriculum Video • 24 mins</p>
+                  </div>
+                </div>
+                <button onclick="alert('Playing secure lesson tutorial video...')" class="px-3 py-1 bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm">Watch Video</button>
+              </div>
+
+              <div class="p-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs">02</span>
+                  <div>
+                    <h4 class="font-bold text-xs sm:text-sm text-slate-900">Lesson 2: Tajweed Rules Worksheet & Chart</h4>
+                    <p class="text-[11px] text-slate-500">PDF Guide (2.4 MB) • Downloadable</p>
+                  </div>
+                </div>
+                <button onclick="alert('Opening secure PDF viewer...')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg">View PDF</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Past Class Recordings / Privacy Section -->
+          <div id="studentRecordingsSection" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-base text-slate-900">Past Class Recordings (دہرائی کے لیے ریکارڈنگز)</h3>
+              <span id="recordingStatusPill" class="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800">
+                Active
+              </span>
+            </div>
+
+            <div id="recordingContentContainer">
+              <!-- Rendered based on whether recording is allowed or off -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Fee Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <h3 class="font-bold text-base text-slate-900 border-b border-slate-100 pb-3">Monthly Tuition Status</h3>
+          
+          <div id="studentFeeCardContainer" class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <div class="space-y-2">
+            <button onclick="printCurrentStudentVoucher()" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm">
+              📄 Print Fee Voucher (PDF)
+            </button>
+            <button onclick="alert('Opening Stripe Gateway Checkout... Credit card, Apple Pay, Google Pay accepted.')" class="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-sm">
+              💳 Pay Online (Card / Stripe)
+            </button>
+            <button onclick="alert('Upload your bank transfer deposit slip or receipt here for administrator verification.')" class="w-full py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1">
+              📤 Upload Bank Transfer Slip
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL 1: ACADEMY & BANK SETTINGS MODAL -->
+  <!-- ========================================== -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Academy & Bank Details Configuration</h3>
+          <p class="text-xs text-slate-500">Configure bank accounts, IBANs, and branding for fee vouchers</p>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleSettingsSubmit(event)" class="space-y-3.5 text-xs sm:text-sm">
+        <!-- 1. Academy Branding -->
+        <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+          <div class="font-bold text-xs uppercase text-emerald-950">Academy Identity (واؤچر ہیڈر کی معلومات)</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Official Academy Name *</label>
+              <input id="setAcademyName" required type="text" value="Quranic Skills Academy" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-bold">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Academy Tagline / Slogan</label>
+              <input id="setAcademyTagline" type="text" value="Global Online Quran & Arabic Learning Institute" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Billing Helpline Phone / WhatsApp *</label>
+              <input id="setAcademyPhone" required type="text" value="+92 300 1234567" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Official Billing Email</label>
+              <input id="setAcademyEmail" type="email" value="billing@quranicskills.com" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Bank Account Details -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+          <div class="font-bold text-xs uppercase text-slate-800">Primary Bank Account (بینک اکاؤنٹ کی تفصیلات)</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Bank Name *</label>
+              <input id="setBankName" required type="text" value="Meezan Bank Ltd" placeholder="e.g. Meezan Bank / HBL / Alfalah" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Account Title *</label>
+              <input id="setAccountTitle" required type="text" value="Quranic Skills Academy" placeholder="Title on bank account" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-bold">
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">IBAN / Account Number (24-Digit IBAN) *</label>
+            <input id="setBankIBAN" required type="text" value="PK12MEZN0001234567890101" placeholder="PK... IBAN Number" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-mono font-bold">
+          </div>
+        </div>
+
+        <!-- 3. Local Mobile Wallets (EasyPaisa / JazzCash) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+          <div class="font-bold text-xs uppercase text-slate-800">Mobile Wallets (EasyPaisa & JazzCash)</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">EasyPaisa Account Number & Title</label>
+              <input id="setEasyPaisa" type="text" value="0300-1234567 (Title: Academy Admin)" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">JazzCash Account Number & Title</label>
+              <input id="setJazzCash" type="text" value="0321-7654321 (Title: Academy Admin)" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Overseas Payment Note (Wise / Remitly / PayPal) -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Overseas / International Remittance Instructions (بیرون ملک طلباء کے لیے)</label>
+          <input id="setOverseasNote" type="text" value="International payments accepted via Wise, Remitly, WorldRemit, and Direct Wire Transfer." class="w-full border border-slate-300 rounded-xl p-2.5">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+          <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-bold hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold shadow-md">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 2: NEW STUDENT ADMISSION FORM -->
+  <!-- ========================================== -->
+  <div id="admissionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Student Admission & Enrollment Form</h3>
+          <p class="text-xs text-slate-500">Configure Schedule, Timezone, Teacher, and Privacy Preferences</p>
+        </div>
+        <button onclick="closeAdmissionModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleAdmissionSubmit(event)" class="space-y-3.5 text-xs sm:text-sm">
+        <!-- 1. Student Name & Age/DOB -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block font-bold text-slate-700 mb-1">Student Full Name *</label>
+            <input id="formStudentName" required type="text" placeholder="e.g. Abdullah Khan" class="w-full border border-slate-300 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Age / Date of Birth *</label>
+            <input id="formStudentAge" required type="text" placeholder="e.g. 10 Years" class="w-full border border-slate-300 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <!-- 2. Guardian & WhatsApp -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Guardian / Father Name *</label>
+            <input id="formGuardianName" required type="text" placeholder="e.g. Muhammad Khan" class="w-full border border-slate-300 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">WhatsApp Number *</label>
+            <input id="formWhatsApp" required type="tel" placeholder="e.g. 923001234567 or 447700..." class="w-full border border-slate-300 rounded-xl p-2.5">
+          </div>
+        </div>
+
+        <!-- 3. Country & Timezone -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Country / City *</label>
+            <input id="formCountry" required type="text" placeholder="e.g. United Kingdom (London) / USA" class="w-full border border-slate-300 rounded-xl p-2.5">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Student Local Timezone *</label>
+            <select id="formTimezone" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-medium">
+              <option value="UK / GMT (London Time)">🇬🇧 UK / GMT (London Time)</option>
+              <option value="US Eastern (EST)">🇺🇸 US Eastern (EST - New York)</option>
+              <option value="US Central (CST)">🇺🇸 US Central (CST - Chicago)</option>
+              <option value="US Pacific (PST)">🇺🇸 US Pacific (PST - California)</option>
+              <option value="PKT (Pakistan Standard Time)">🇵🇰 PKT (Pakistan Time - GMT+5)</option>
+              <option value="Gulf / Saudi Time (AST/GST)">🇸🇦 Gulf / Saudi Time (Riyadh/Dubai)</option>
+              <option value="Australia (AEST)">🇦🇺 Australia (Sydney Time)</option>
+              <option value="Europe / CET (Berlin/Paris)">🇪🇺 Europe (CET)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. Class Mode & Time Slot -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
+          <div>
+            <label class="block font-bold text-emerald-950 mb-1">Class Mode *</label>
+            <select id="formClassMode" onchange="toggleClassModeFields()" class="w-full border border-emerald-300 rounded-lg p-2 bg-white font-bold text-emerald-900">
+              <option value="1-on-1">👤 1-on-1 Individual Session</option>
+              <option value="Group">👥 Group Cohort Batch</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-emerald-950 mb-1">Time Slot *</label>
+            <input id="formTimeSlot" type="text" value="04:00 PM - 04:30 PM" placeholder="e.g. 04:00 PM - 04:30 PM" class="w-full border border-emerald-300 rounded-lg p-2 bg-white font-medium">
+          </div>
+        </div>
+
+        <!-- 5. Class Days & Assigned Teacher -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Class Days *</label>
+            <select id="formClassDays" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-medium">
+              <option value="Mon to Thu (4 Days/Week)">Mon to Thu (4 Days / Week)</option>
+              <option value="Mon, Wed, Fri (3 Days/Week)">Mon, Wed, Fri (3 Days / Week)</option>
+              <option value="Tue, Thu, Sat (3 Days/Week)">Tue, Thu, Sat (3 Days / Week)</option>
+              <option value="Sat & Sun (Weekend Only)">Sat & Sun (Weekend Only - 2 Days)</option>
+              <option value="Mon to Fri (5 Days/Week)">Mon to Fri (5 Days / Week)</option>
+              <option value="Daily (Except Friday)">Daily (Except Friday - 6 Days)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Assigned Teacher *</label>
+            <select id="formTeacher" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-medium">
+              <optgroup label="👨‍🏫 Male Teachers (8)">
+                <option value="Muallim Mufti Junaid Shams">QSK-EMP-001 — Muallim Mufti Junaid Shams</option>
+                <option value="Muallim Aryan Jahangir">QSK-EMP-002 — Muallim Aryan Jahangir</option>
+                <option value="Muallim Maulana Sami Ullah">QSK-EMP-003 — Muallim Maulana Sami Ullah</option>
+                <option value="Muallim Muhammad Ibrar">QSK-EMP-004 — Muallim Muhammad Ibrar</option>
+                <option value="Muallim Maulana Inzimam ul Haq">QSK-EMP-005 — Muallim Maulana Inzimam ul Haq</option>
+                <option value="Muallim Salim">QSK-EMP-006 — Muallim Salim</option>
+                <option value="Muallim Maulana Majid Ur Rehman">QSK-EMP-007 — Muallim Maulana Majid Ur Rehman</option>
+                <option value="Muallim Maulana Muhammad Afaq Ajmal">QSK-EMP-008 — Muallim Maulana Muhammad Afaq Ajmal</option>
+              </optgroup>
+              <optgroup label="👩‍🏫 Female Teachers (3)">
+                <option value="Mualima Zainab Riaz">QSK-EMP-009 — Mualima Zainab Riaz</option>
+                <option value="Mualima Sumayyah Riaz">QSK-EMP-010 — Mualima Sumayyah Riaz</option>
+                <option value="Mualima Faiza Riaz">QSK-EMP-011 — Mualima Faiza Riaz</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <!-- 6. Parental Recording Permission -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+          <label class="block font-bold text-slate-800 mb-1">Class Video/Audio Recording Policy *</label>
+          <p class="text-xs text-slate-500 mb-2">Turn OFF if parents or female students do not grant permission to record sessions.</p>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/50 cursor-pointer">
+              <input type="radio" name="recordingPref" value="allowed" checked class="text-emerald-600 focus:ring-emerald-500">
+              <span class="text-xs font-bold text-emerald-950">✅ Allow Recording</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-rose-300 bg-rose-50/50 cursor-pointer">
+              <input type="radio" name="recordingPref" value="disabled" class="text-rose-600 focus:ring-rose-500">
+              <span class="text-xs font-bold text-rose-950">🚫 Turn OFF (Parental Privacy)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 7. Course & Fee -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Course / Program *</label>
+            <select id="formBatch" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white">
+              <option value="Quranic Tajweed Essentials">Quranic Tajweed Essentials</option>
+              <option value="Quran Memorization (Hifz)">Quran Memorization (Hifz)</option>
+              <option value="Arabic Grammar & Tafseer">Arabic Grammar & Tafseer</option>
+              <option value="Noorani Qaida for Beginners">Noorani Qaida for Beginners</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Currency & Tuition Fee *</label>
+            <div class="flex gap-1">
+              <select id="formCurrency" class="w-24 border border-slate-300 rounded-xl p-2 bg-white font-bold">
+                <option value="USD">$ USD</option>
+                <option value="GBP">£ GBP</option>
+                <option value="PKR">Rs PKR</option>
+                <option value="SAR">﷼ SAR</option>
+                <option value="EUR">€ EUR</option>
+              </select>
+              <input id="formFeeAmount" required type="number" value="50" placeholder="50" class="flex-1 border border-slate-300 rounded-xl p-2.5 font-bold">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+          <button type="button" onclick="closeAdmissionModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-bold hover:bg-slate-50">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold shadow-md">Complete Enrollment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 3: 1-ON-1 RESCHEDULE / MAKE-UP CLASS -->
+  <!-- ========================================== -->
+  <div id="rescheduleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Reschedule 1-on-1 Class (قضاء کلاس)</h3>
+          <p id="rescheduleStudentLabel" class="text-xs text-slate-500">Student: -</p>
+        </div>
+        <button onclick="closeRescheduleModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Make-up Class Date *</label>
+          <input id="rescheduleDate" type="date" class="w-full border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">New 30-Min Time Slot *</label>
+          <input id="rescheduleTime" type="text" value="06:00 PM - 06:30 PM (Saturday)" class="w-full border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Reason for Rescheduling</label>
+          <input id="rescheduleReason" type="text" placeholder="e.g. Student informed beforehand due to exam" class="w-full border border-slate-300 rounded-xl p-2.5">
+        </div>
+      </div>
+
+      <div class="pt-3 flex justify-end gap-2">
+        <button type="button" onclick="closeRescheduleModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-bold hover:bg-slate-50">Cancel</button>
+        <button type="button" onclick="confirmReschedule()" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold shadow-md">Confirm & Notify Parent</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 4: PRINTABLE OFFICIAL FEE VOUCHER -->
+  <!-- ========================================== -->
+  <div id="voucherModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      
+      <!-- Printable Area -->
+      <div id="printableVoucher" class="border-2 border-emerald-800 rounded-2xl p-6 bg-white space-y-5">
+        <!-- Voucher Header -->
+        <div class="text-center border-b-2 border-emerald-800 pb-4">
+          <div class="flex items-center justify-center gap-3 mb-1">
+            <div class="w-12 h-12 rounded-xl bg-black border border-emerald-700/50 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+              <img src="asset/logo.qs.jpeg" alt="Logo" class="w-full h-full object-contain rounded-lg">
+            </div>
+            <div class="text-left">
+              <h2 id="vchrAcademyName" class="text-xl font-extrabold text-emerald-900 uppercase tracking-wide leading-tight">Quranic Skills Academy</h2>
+              <p id="vchrTagline" class="text-xs text-slate-600 font-semibold">Online Global Quran & Arabic Learning Institute</p>
+            </div>
+          </div>
+          <p id="vchrContactLine" class="text-[11px] text-slate-500 mt-0.5">Contact: +92 300 1234567 • Email: billing@quranicskills.com</p>
+          <div class="inline-block mt-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold uppercase tracking-wider">
+            Official Tuition Fee Voucher
+          </div>
+        </div>
+
+        <!-- Student & Bill Meta -->
+        <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div><span class="text-slate-500 font-medium">Voucher No:</span> <strong id="vchrNo" class="font-mono text-slate-900 font-bold">INV-2026-101</strong></div>
+          <div><span class="text-slate-500 font-medium">Issue Date:</span> <strong id="vchrIssueDate" class="text-slate-900 font-bold">01 Oct 2026</strong></div>
+          <div><span class="text-slate-500 font-medium">Student Name:</span> <strong id="vchrStudentName" class="text-slate-900 font-bold">-</strong></div>
+          <div><span class="text-slate-500 font-medium">Age / DOB:</span> <strong id="vchrStudentAge" class="text-slate-900 font-bold">-</strong></div>
+          <div><span class="text-slate-500 font-medium">Guardian Name:</span> <strong id="vchrGuardianName" class="text-slate-900 font-bold">-</strong></div>
+          <div><span class="text-slate-500 font-medium">Assigned Teacher:</span> <strong id="vchrTeacher" class="text-slate-900 font-bold">-</strong></div>
+          <div><span class="text-slate-500 font-medium">Class Mode:</span> <strong id="vchrClassMode" class="text-slate-900 font-bold">1-on-1 Session</strong></div>
+          <div><span class="text-slate-500 font-medium">Schedule & Days:</span> <strong id="vchrSchedule" class="text-slate-900 font-bold">-</strong></div>
+          <div class="col-span-2"><span class="text-slate-500 font-medium">Payment Due Date:</span> <strong class="text-red-700 font-bold">10 Oct 2026</strong></div>
+        </div>
+
+        <!-- Breakdown Table -->
+        <table class="w-full text-left text-xs border border-slate-200">
+          <thead class="bg-slate-100 text-slate-700 font-bold">
+            <tr>
+              <th class="p-2 border-b">Particulars / Description</th>
+              <th class="p-2 border-b text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="p-2 border-b">Monthly Tuition & Live Instruction Fee</td>
+              <td id="vchrAmount" class="p-2 border-b text-right font-bold">$0.00</td>
+            </tr>
+            <tr>
+              <td class="p-2 border-b">Curriculum Worksheets, Audio LMS Portal Access</td>
+              <td class="p-2 border-b text-right text-emerald-700 font-semibold">Included ($0.00)</td>
+            </tr>
+            <tr class="bg-slate-50 font-bold">
+              <td class="p-2 text-slate-900">Total Net Amount Payable:</td>
+              <td id="vchrTotal" class="p-2 text-right text-emerald-800 text-sm font-extrabold">$0.00</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Dynamic Bank Account Details for Transfer -->
+        <div class="text-[11px] p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-950 space-y-1">
+          <div class="font-bold">Official Payment Instructions:</div>
+          <div>• <strong>Bank:</strong> <span id="vchrBankNameDisplay">Meezan Bank Ltd</span> | <strong>Title:</strong> <span id="vchrAccountTitleDisplay">Quranic Skills Academy</span></div>
+          <div>• <strong>IBAN:</strong> <span id="vchrBankIBANDisplay" class="font-mono font-bold">PK12MEZN0001234567890101</span></div>
+          <div>• <strong>EasyPaisa:</strong> <span id="vchrEasyPaisaDisplay">0300-1234567</span> | <strong>JazzCash:</strong> <span id="vchrJazzCashDisplay">0321-7654321</span></div>
+          <div id="vchrOverseasDisplay" class="text-slate-700 italic">• International: Wise & Remitly accepted.</div>
+          <div class="text-emerald-800 font-semibold">• Please share a confirmation receipt after payment. Jazakum Allahu Khairan!</div>
+        </div>
+
+        <!-- Signature & Stamp -->
+        <div class="flex justify-between items-end pt-4 text-center text-xs text-slate-500">
+          <div>
+            <div class="w-28 border-b border-slate-400 mb-1"></div>
+            <div>Guardian Signature</div>
+          </div>
+          <div>
+            <div class="w-28 border-b border-slate-400 mb-1"></div>
+            <div>Authorized Stamp & Sign</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeVoucherModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-bold hover:bg-slate-50 text-xs sm:text-sm">Close</button>
+        <button onclick="window.print()" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold shadow-md text-xs sm:text-sm flex items-center gap-1.5">
+          <span>🖨️</span> <span>Print / Save as PDF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 5: QURANIC LESSON & SABAQ LOGGER -->
+  <!-- ========================================== -->
+  <div id="quranLogModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800">📖 Daily Lesson Log</span>
+            <span id="logStudentRoll" class="text-xs font-mono font-bold text-slate-500">QS-101</span>
+          </div>
+          <h3 id="logStudentName" class="text-lg font-bold text-slate-900 mt-1">Update Quran Progress</h3>
+          <p id="logStudentMeta" class="text-xs text-slate-500">Instructor: Sheikh Ahmad • Course: Quranic Tajweed Essentials</p>
+        </div>
+        <button onclick="closeQuranLogModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleQuranLogSubmit(event)" class="space-y-3.5 text-xs sm:text-sm">
+        <input type="hidden" id="logStudentId">
+
+        <!-- Program Category Preset Selector -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Curriculum Category (نصاب کی قسم)</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" onclick="setPresetCategory('tajweed')" id="catBtn-tajweed" class="cat-pill py-2 px-2 rounded-xl border border-emerald-500 bg-emerald-50 text-emerald-900 font-bold text-xs text-center transition-all">
+              📖 Nazra & Tajweed
+            </button>
+            <button type="button" onclick="setPresetCategory('hifz')" id="catBtn-hifz" class="cat-pill py-2 px-2 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-xs text-center hover:bg-slate-50 transition-all">
+              🕋 Hifz-ul-Quran
+            </button>
+            <button type="button" onclick="setPresetCategory('qaida')" id="catBtn-qaida" class="cat-pill py-2 px-2 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-xs text-center hover:bg-slate-50 transition-all">
+              📗 Noorani Qaida
+            </button>
+            <button type="button" onclick="setPresetCategory('islamic')" id="catBtn-islamic" class="cat-pill py-2 px-2 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-xs text-center hover:bg-slate-50 transition-all">
+              🤲 Islamic Studies
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. Sabaq (سبق - New Lesson) -->
+        <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-emerald-950 flex items-center gap-1.5">
+              <span>📖</span> <span>Sabaq / New Lesson (آج کا نیا سبق) *</span>
+            </label>
+            <span class="text-[11px] text-emerald-700 font-medium">Surah, Ayah range or Qaida lesson</span>
+          </div>
+          <input id="logSabaq" required type="text" placeholder="e.g. Surah Al-Mulk (Ayat 1 to 14) or Qaida Lesson 5: Tanween" class="w-full border border-emerald-300 rounded-xl p-2.5 bg-white font-semibold text-slate-800">
+        </div>
+
+        <!-- 2. Sabqi & Manzil Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Sabqi (Recent Revision) -->
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-800 text-xs flex items-center gap-1">
+                <span>🔄</span> <span>Sabqi (سبقی - حالیہ دہرائی)</span>
+              </label>
+              <span class="text-[10px] text-slate-500">Recent 2-5 pages</span>
+            </div>
+            <input id="logSabqi" type="text" placeholder="e.g. Surah Al-Jumu'ah / Last 3 pages" class="w-full border border-slate-300 rounded-xl p-2 bg-white text-xs sm:text-sm">
+          </div>
+
+          <!-- Manzil (Older Juz Revision) -->
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-800 text-xs flex items-center gap-1">
+                <span>🕋</span> <span>Manzil (منزل - پچھلے پارے)</span>
+              </label>
+              <span class="text-[10px] text-slate-500">For Hifz / Nazra</span>
+            </div>
+            <input id="logManzil" type="text" placeholder="e.g. Para 28 (Qadd Sami'a) Quarter 1" class="w-full border border-slate-300 rounded-xl p-2 bg-white text-xs sm:text-sm">
+          </div>
+        </div>
+
+        <!-- 3. Performance Rating & Mistakes -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Performance Grade (کارکردگی) *</label>
+            <select id="logGrade" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-bold text-emerald-800">
+              <option value="⭐⭐⭐⭐⭐ A+ (Excellent / ممتاز)">⭐⭐⭐⭐⭐ A+ (Excellent / ممتاز - Flawless)</option>
+              <option value="⭐⭐⭐⭐ A (Very Good / جید جداً)">⭐⭐⭐⭐ A (Very Good / جید جداً - 1-2 Pauses)</option>
+              <option value="⭐⭐⭐ B (Good / جید)">⭐⭐⭐ B (Good / جید - Needs Practice)</option>
+              <option value="⭐⭐ C (Needs Revision / اعادہ درکار)">⭐⭐ C (Needs Revision / Repeat Lesson)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Mistakes / Pronunciation Pauses</label>
+            <select id="logMistakes" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white font-medium">
+              <option value="0 Mistakes (Flawless Recitation)">0 Mistakes (Flawless Recitation)</option>
+              <option value="1-2 Minor Tajweed Corrections">1-2 Minor Tajweed Corrections</option>
+              <option value="3-4 Mistakes (Needs revision)">3-4 Mistakes (Needs revision)</option>
+              <option value="Repeated Lesson Required">Repeated Lesson Required</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. Teacher's Remarks & Homework Instructions -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Homework & Articulation Notes (گھر کا کام اور تجوید ہدایات)</label>
+          <textarea id="logHomework" rows="2" placeholder="e.g. Practice heavy letters (ص, ض, ط, ظ) 3 times with parent before next session." class="w-full border border-slate-300 rounded-xl p-2.5 text-xs sm:text-sm"></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 flex flex-col sm:flex-row justify-between items-center gap-2 border-t border-slate-100">
+          <button type="button" onclick="closeQuranLogModal()" class="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-xl text-slate-700 font-bold hover:bg-slate-50">
+            Cancel
+          </button>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold shadow-md flex items-center justify-center gap-1.5">
+              <span>💾</span> <span>Save Log Only</span>
+            </button>
+            <button type="button" onclick="handleQuranLogAndWhatsApp()" class="flex-1 sm:flex-none px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold shadow-md flex items-center justify-center gap-1.5">
+              <span>📲</span> <span>Save & Send WhatsApp</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- FOOTER -->
+  <!-- ========================================== -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+    <span id="footerAcademyName">Quranic Skills Academy</span> LMS • Bank Details & Billing Gateway Ready
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT: LOGIC & PERSISTENCE -->
+  <!-- ========================================== -->
+  <script>
+    let activeRescheduleStudentId = null;
+    let activeStudentPortalId = null;
+    let currentLogCategory = 'tajweed';
+
+    // --- 1. DEFAULT ACADEMY & BANK SETTINGS ---
+    const defaultSettings = {
+      academyName: "Quranic Skills Academy",
+      tagline: "Global Online Quran & Arabic Learning Institute",
+      phone: "+92 300 1234567",
+      email: "billing@quranicskills.com",
+      bankName: "Meezan Bank Ltd",
+      accountTitle: "Quranic Skills Academy",
+      bankIBAN: "PK12MEZN0001234567890101",
+      easyPaisa: "0300-1234567 (Title: Academy Admin)",
+      jazzCash: "0321-7654321 (Title: Academy Admin)",
+      overseasNote: "International payments accepted via Wise, Remitly, WorldRemit, and Direct Wire Transfer."
+    };
+
+    function getAcademySettings() {
+      const data = localStorage.getItem('qs_lms_settings');
+      return data ? JSON.parse(data) : defaultSettings;
+    }
+
+    function saveAcademySettings(settings) {
+      localStorage.setItem('qs_lms_settings', JSON.stringify(settings));
+      applySettingsToUI();
+    }
+
+    function applySettingsToUI() {
+      const s = getAcademySettings();
+      document.getElementById('headerAcademyName').innerText = s.academyName;
+      document.getElementById('headerTagline').innerText = s.tagline;
+      document.getElementById('footerAcademyName').innerText = s.academyName;
+      
+      document.getElementById('statBankName').innerText = s.bankName;
+      document.getElementById('statAccountTitle').innerText = "Title: " + s.accountTitle;
+
+      // Update Form fields in settings modal
+      document.getElementById('setAcademyName').value = s.academyName;
+      document.getElementById('setAcademyTagline').value = s.tagline;
+      document.getElementById('setAcademyPhone').value = s.phone;
+      document.getElementById('setAcademyEmail').value = s.email;
+      document.getElementById('setBankName').value = s.bankName;
+      document.getElementById('setAccountTitle').value = s.accountTitle;
+      document.getElementById('setBankIBAN').value = s.bankIBAN;
+      document.getElementById('setEasyPaisa').value = s.easyPaisa;
+      document.getElementById('setJazzCash').value = s.jazzCash;
+      document.getElementById('setOverseasNote').value = s.overseasNote;
+
+      // Update Voucher Template Elements
+      document.getElementById('vchrAcademyName').innerText = s.academyName;
+      document.getElementById('vchrTagline').innerText = s.tagline;
+      document.getElementById('vchrContactLine').innerText = `Contact: ${s.phone} • Email: ${s.email}`;
+      document.getElementById('vchrBankNameDisplay').innerText = s.bankName;
+      document.getElementById('vchrAccountTitleDisplay').innerText = s.accountTitle;
+      document.getElementById('vchrBankIBANDisplay').innerText = s.bankIBAN;
+      document.getElementById('vchrEasyPaisaDisplay').innerText = s.easyPaisa;
+      document.getElementById('vchrJazzCashDisplay').innerText = s.jazzCash;
+      document.getElementById('vchrOverseasDisplay').innerText = "• " + s.overseasNote;
+    }
+
+    function openSettingsModal() {
+      applySettingsToUI();
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function handleSettingsSubmit(e) {
+      e.preventDefault();
+      const newSettings = {
+        academyName: document.getElementById('setAcademyName').value,
+        tagline: document.getElementById('setAcademyTagline').value,
+        phone: document.getElementById('setAcademyPhone').value,
+        email: document.getElementById('setAcademyEmail').value,
+        bankName: document.getElementById('setBankName').value,
+        accountTitle: document.getElementById('setAccountTitle').value,
+        bankIBAN: document.getElementById('setBankIBAN').value,
+        easyPaisa: document.getElementById('setEasyPaisa').value,
+        jazzCash: document.getElementById('setJazzCash').value,
+        overseasNote: document.getElementById('setOverseasNote').value
+      };
+
+      saveAcademySettings(newSettings);
+      closeSettingsModal();
+      alert('✅ Academy branding & Bank Account details saved successfully!\nAll fee vouchers and WhatsApp reminders will now use these exact details.');
+    }
+
+    // --- 2. STORAGE CONTROLLERS ---
+    function getStoredStudents() {
+      const data = localStorage.getItem('qs_lms_students');
+      return data ? JSON.parse(data) : [];
+    }
+
+    function saveStoredStudents(students) {
+      localStorage.setItem('qs_lms_students', JSON.stringify(students));
+      renderAdminTable();
+      renderTeacherTable();
+      renderStudentPortal();
+      updateStats();
+    }
+
+    function getStoredReports() {
+      const data = localStorage.getItem('qs_lms_reports');
+      return data ? JSON.parse(data) : [];
+    }
+
+    function saveStoredReports(reports) {
+      localStorage.setItem('qs_lms_reports', JSON.stringify(reports));
+      renderSupervisorReports();
+      updateStats();
+    }
+
+    // --- 3. RENDER FUNCTIONS ---
+    function renderAdminTable() {
+      const students = getStoredStudents();
+      const tbody = document.getElementById('adminStudentsTableBody');
+      tbody.innerHTML = '';
+
+      if (students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="py-12 text-center text-slate-400">
+              <div class="text-3xl mb-2">🎓</div>
+              <div class="font-bold text-sm text-slate-700">No students enrolled yet</div>
+              <p class="text-xs text-slate-500 mt-1">Click the <strong class="text-emerald-700 font-semibold">"➕ Enroll New Student"</strong> button above to register your students.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      students.forEach(st => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition-colors';
+        const symbol = st.currency === 'USD' ? '$' : st.currency === 'GBP' ? '£' : st.currency === 'SAR' ? '﷼ ' : st.currency === 'EUR' ? '€' : 'Rs ';
+        const isOneOnOne = st.classMode === '1-on-1';
+        const isRecAllowed = st.recordingPolicy !== 'disabled';
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 font-mono font-bold text-slate-700">${st.id}</td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${st.name}</div>
+            <div class="text-[11px] text-slate-500">Age: <span class="font-semibold text-emerald-800">${st.age || 'N/A'}</span></div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${st.guardian}</div>
+            <div class="text-[11px] text-slate-500">${st.country}</div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${isOneOnOne ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-100 text-blue-800 border border-blue-200'}">
+              ${isOneOnOne ? '👤 1-on-1' : '👥 Group'}
+            </span>
+            <div class="text-[11px] text-slate-700 font-semibold mt-0.5 font-mono">⏰ ${st.timeSlot || '04:00 PM'}</div>
+            <div class="text-[10px] text-slate-500 font-medium">🌐 ${st.timezone || 'UK / GMT'}</div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-800 text-xs">${st.teacher || 'Sheikh Ahmad'}</div>
+            <div class="text-[11px] text-emerald-700 font-medium">📅 ${st.classDays || 'Mon to Thu'}</div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900 text-xs">📖 ${st.sabaq || 'Lesson pending'}</div>
+            <div class="text-[11px] text-amber-700 font-bold">${st.grade ? st.grade.split('(')[0] : '⭐⭐⭐⭐⭐ A+'}</div>
+          </td>
+          <td class="py-3 px-4">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${isRecAllowed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+              ${isRecAllowed ? '🎥 Allowed' : '🚫 Off (Privacy)'}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-emerald-700">${symbol}${st.fee} ${st.currency}</div>
+            <button onclick="toggleFeeStatus('${st.id}')" class="mt-1 px-2 py-0.5 rounded text-[11px] font-bold block ${st.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              ${st.status === 'paid' ? '✓ Paid' : 'Unpaid'}
+            </button>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="printStudentVoucher('${st.id}')" class="text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 font-bold px-2.5 py-1 rounded-lg border border-slate-200 transition-colors">
+              📄 Voucher
+            </button>
+          </td>
+          <td class="py-3 px-4 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <button onclick="sendFeeWhatsApp('${st.id}')" title="Send WhatsApp Fee Reminder" class="text-xs bg-emerald-600 hover:bg-emerald-700 font-bold px-2.5 py-1 rounded text-white shadow-sm">
+                💬 Remind
+              </button>
+              <button onclick="deleteStudent('${st.id}')" title="Delete Student" class="text-xs text-red-500 hover:text-red-700 font-bold p-1">
+                ✕
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTeacherTable() {
+      const students = getStoredStudents();
+      const tbody = document.getElementById('teacherAttendanceTableBody');
+      tbody.innerHTML = '';
+
+      if (students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-10 text-center text-slate-400">
+              <div class="font-bold text-sm text-slate-700">No students scheduled yet</div>
+              <p class="text-xs text-slate-500 mt-1">Enroll students in the Super Admin portal to manage sessions here.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      students.forEach(st => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80';
+        const isOneOnOne = st.classMode === '1-on-1';
+        const isRecAllowed = st.recordingPolicy !== 'disabled';
+
+        tr.innerHTML = `
+          <td class="py-3 px-3">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${isOneOnOne ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+              ${isOneOnOne ? '👤 1-on-1' : '👥 Group'}
+            </span>
+            <div class="text-[11px] text-slate-700 font-mono font-bold mt-0.5">${st.timeSlot || '04:00 PM'}</div>
+            <div class="text-[10px] text-slate-500">🌐 ${st.timezone || 'UK / GMT'}</div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-900">${st.name} <span class="text-xs text-slate-500 font-normal">(${st.age || 'Age -'})</span></div>
+            <div class="text-[11px] text-emerald-800 font-medium">Instructor: ${st.teacher || 'Sheikh Ahmad'} • ${st.classDays || 'Mon-Thu'}</div>
+            <div class="mt-1">
+              ${isRecAllowed ? `
+                <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  🎥 Cloud Recording Permitted
+                </span>
+              ` : `
+                <span class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                  🚫 DO NOT RECORD (Parental Request)
+                </span>
+              `}
+            </div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <button onclick="setStudentAttendance('${st.id}', 'present')" class="px-2 py-1 text-xs font-bold rounded ${st.attendance === 'present' ? 'bg-emerald-600 text-white' : 'text-slate-600'}">Present</button>
+              <button onclick="setStudentAttendance('${st.id}', 'absent')" class="px-2 py-1 text-xs font-bold rounded ${st.attendance === 'absent' ? 'bg-red-600 text-white' : 'text-slate-600'}">Absent</button>
+              <button onclick="setStudentAttendance('${st.id}', 'late')" class="px-2 py-1 text-xs font-bold rounded ${st.attendance === 'late' ? 'bg-amber-500 text-white' : 'text-slate-600'}">Late</button>
+              <button onclick="setStudentAttendance('${st.id}', 'excused')" class="px-2 py-1 text-xs font-bold rounded ${st.attendance === 'excused' ? 'bg-blue-600 text-white' : 'text-slate-600'}">Excused</button>
+            </div>
+          </td>
+          <td class="py-3 px-3">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-bold text-slate-900 text-xs truncate max-w-[210px]" title="${st.sabaq || 'Lesson pending'}">📖 ${st.sabaq || 'Lesson pending'}</span>
+                <span class="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 shrink-0">${st.grade ? st.grade.split('(')[0] : '⭐⭐⭐⭐⭐ A+'}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+                <span>🔄 Sabqi: <strong class="text-slate-700">${st.sabqi || 'None'}</strong></span>
+                <span>•</span>
+                <span>🕋 Manzil: <strong class="text-slate-700">${st.manzil || 'N/A'}</strong></span>
+              </div>
+              <div class="pt-1 flex items-center justify-between border-t border-slate-200/60 mt-1">
+                <span class="text-[10px] text-slate-400">Date: ${st.lastLogDate || 'Today'}</span>
+                <button onclick="openQuranLogModal('${st.id}')" class="text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-0.5 rounded-lg border border-emerald-300 transition-all flex items-center gap-1 shadow-sm">
+                  <span>📝</span> <span>Update Sabaq</span>
+                </button>
+              </div>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-right">
+            <div class="flex flex-col items-end gap-1.5">
+              <button onclick="sendDailyProgressWhatsApp('${st.id}')" title="Send Daily Sabaq Report on WhatsApp" class="text-xs bg-green-600 hover:bg-green-700 text-white font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+                <span>📲</span> <span>WhatsApp Report</span>
+              </button>
+              ${isOneOnOne ? `
+                <div class="flex items-center gap-1">
+                  <button onclick="sendWaitingAlert('${st.id}')" title="Send WhatsApp alert that teacher is waiting" class="text-[11px] bg-amber-500 hover:bg-amber-600 text-white font-bold px-2 py-0.5 rounded shadow-sm">
+                    ⏳ Waiting
+                  </button>
+                  <button onclick="openRescheduleModal('${st.id}')" title="Schedule Make-up class" class="text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-bold px-2 py-0.5 rounded shadow-sm">
+                    🔄 Reschedule
+                  </button>
+                </div>
+              ` : `
+                <span class="text-[11px] text-slate-400 font-medium">Batch Session</span>
+              `}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderSupervisorReports() {
+      const reports = getStoredReports();
+      const list = document.getElementById('supervisorReportsList');
+      list.innerHTML = '';
+
+      if (reports.length === 0) {
+        list.innerHTML = `
+          <div class="text-center py-6 text-slate-400 text-xs">
+            No inspection reports recorded yet. Fill out the scorecard above to submit a report.
+          </div>
+        `;
+        return;
+      }
+
+      reports.forEach(r => {
+        const item = document.createElement('div');
+        item.className = 'border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-1.5';
+        item.innerHTML = `
+          <div class="flex justify-between items-center">
+            <div class="font-bold text-sm text-slate-900">${r.teacher} • <span class="text-slate-600 font-normal">${r.batch}</span></div>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 font-bold">${r.rating}</span>
+          </div>
+          <div class="text-xs text-slate-500">Inspection Date: ${r.date}</div>
+          <div class="text-xs text-slate-700 pt-1"><strong>Key Strengths:</strong> ${r.strengths}</div>
+          <div class="text-xs text-emerald-800"><strong>Recommendations:</strong> ${r.improvements}</div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function renderStudentPortal() {
+      const students = getStoredStudents();
+      const container = document.getElementById('studentFeeCardContainer');
+      const title = document.getElementById('activeStudentTitle');
+      const subtitle = document.getElementById('activeStudentSubtitle');
+      const modeBadge = document.getElementById('activeStudentModeBadge');
+      const recBadge = document.getElementById('activeStudentRecBadge');
+      const recContainer = document.getElementById('recordingContentContainer');
+      const recPill = document.getElementById('recordingStatusPill');
+
+      const selector = document.getElementById('studentPortalSelector');
+      const progressContainer = document.getElementById('studentQuranProgressCard');
+      const attBadge = document.getElementById('studentAttendanceBadgeContainer');
+      const cardDate = document.getElementById('stCardDate');
+
+      if (students.length === 0) {
+        if (selector) selector.innerHTML = '<option>No students enrolled</option>';
+        title.innerText = "Course: Quranic Tajweed Essentials";
+        subtitle.innerText = "No student enrolled yet. Please add a student in the Super Admin portal.";
+        modeBadge.innerText = "Class Mode: Pending";
+        recBadge.innerText = "Recording: Pending";
+        if (cardDate) cardDate.innerText = "Recorded: -";
+        if (attBadge) attBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">No Record</span>';
+        if (progressContainer) {
+          progressContainer.innerHTML = `
+            <div class="text-center py-6 text-slate-400 text-xs">
+              <div class="text-2xl mb-1">📖</div>
+              <p>No active student enrolled. Register a student in Super Admin to track Quran progress.</p>
+            </div>
+          `;
+        }
+        container.innerHTML = `
+          <div class="text-center py-4 text-slate-400 text-xs">
+            No active student bill found.
+          </div>
+        `;
+        recContainer.innerHTML = `
+          <div class="text-center py-4 text-slate-400 text-xs">No active enrolled student selected.</div>
+        `;
+        return;
+      }
+
+      // Populate student selector
+      if (selector) {
+        selector.innerHTML = students.map(s => 
+          `<option value="${s.id}" ${(activeStudentPortalId ? s.id === activeStudentPortalId : s.id === students[0].id) ? 'selected' : ''}>
+            ${s.name} (${s.id})
+          </option>`
+        ).join('');
+      }
+
+      // Active student
+      let st = students.find(s => s.id === activeStudentPortalId);
+      if (!st) {
+        st = students[0];
+        activeStudentPortalId = st.id;
+      }
+
+      const symbol = st.currency === 'USD' ? '$' : st.currency === 'GBP' ? '£' : st.currency === 'SAR' ? '﷼ ' : st.currency === 'EUR' ? '€' : 'Rs ';
+      const isOneOnOne = st.classMode === '1-on-1';
+      const isRecAllowed = st.recordingPolicy !== 'disabled';
+
+      // Update Header & Badges
+      modeBadge.innerText = isOneOnOne ? `👤 1-on-1 Session (Slot: ${st.timeSlot || '04:00 PM'} • ${st.timezone || 'UK/GMT'})` : `👥 Group Batch (${st.classDays || 'Mon-Thu'})`;
+      modeBadge.className = isOneOnOne ? "px-2.5 py-1 bg-purple-100 text-purple-800 border border-purple-200 rounded-md text-xs font-bold" : "px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-bold";
+      
+      if (cardDate) cardDate.innerText = "Recorded: " + (st.lastLogDate || 'Today');
+
+      if (attBadge) {
+        const att = st.attendance || 'present';
+        const colors = {
+          present: 'bg-emerald-100 text-emerald-800',
+          absent: 'bg-red-100 text-red-800',
+          late: 'bg-amber-100 text-amber-800',
+          excused: 'bg-blue-100 text-blue-800'
+        };
+        attBadge.innerHTML = `<span class="px-3 py-1 rounded-full text-xs font-bold ${colors[att] || colors.present}">✓ ${att.toUpperCase()}</span>`;
+      }
+
+      // Render Quran Progress Card
+      if (progressContainer) {
+        progressContainer.innerHTML = `
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-teal-50/40 border border-emerald-200/80 space-y-3.5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-3.5 rounded-xl border border-emerald-100 shadow-sm">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">📖 Current Sabaq (نیا سبق)</span>
+                <h4 class="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5">${st.sabaq || 'Lesson completed'}</h4>
+              </div>
+              <div class="sm:text-right">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Teacher Evaluation</span>
+                <div class="text-xs sm:text-sm font-extrabold text-amber-700 mt-0.5 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">${st.grade || '⭐⭐⭐⭐⭐ A+ (Excellent)'}</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="bg-white p-3 rounded-xl border border-slate-200">
+                <span class="text-slate-500 font-medium">🔄 Sabqi (Recent Revision):</span>
+                <div class="font-bold text-slate-900 mt-0.5">${st.sabqi || 'None'}</div>
+              </div>
+              <div class="bg-white p-3 rounded-xl border border-slate-200">
+                <span class="text-slate-500 font-medium">🕋 Manzil (Juz Revision):</span>
+                <div class="font-bold text-slate-900 mt-0.5">${st.manzil || 'N/A'}</div>
+              </div>
+            </div>
+
+            ${st.homework ? `
+              <div class="bg-emerald-100/60 p-3 rounded-xl border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2">
+                <span class="text-base">📝</span>
+                <div>
+                  <strong>Teacher Homework & Articulation Notes:</strong>
+                  <p class="mt-0.5">${st.homework}</p>
+                </div>
+              </div>
+            ` : ''}
+
+            ${st.history && st.history.length > 0 ? `
+              <div class="pt-1">
+                <div class="text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>Past Recitations Log</span>
+                  <span class="text-[10px] text-slate-500 font-normal">Last ${Math.min(st.history.length, 3)} records</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-[11px] border border-slate-200 rounded-lg overflow-hidden bg-white">
+                    <thead class="bg-slate-100 text-slate-600 font-bold">
+                      <tr>
+                        <th class="p-1.5">Date</th>
+                        <th class="p-1.5">Sabaq</th>
+                        <th class="p-1.5">Sabqi</th>
+                        <th class="p-1.5">Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      ${st.history.slice(0, 3).map(h => `
+                        <tr>
+                          <td class="p-1.5 font-medium text-slate-500">${h.date}</td>
+                          <td class="p-1.5 font-bold text-slate-900">${h.sabaq}</td>
+                          <td class="p-1.5 text-slate-700">${h.sabqi || '-'}</td>
+                          <td class="p-1.5 font-bold text-emerald-700">${h.grade ? h.grade.split('(')[0] : 'A+'}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      // Recording badge & container
+      if (isRecAllowed) {
+        recBadge.innerText = "🎥 Cloud Recording: Active";
+        recBadge.className = "px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-md text-xs font-bold";
+        recPill.innerText = "Recording Enabled";
+        recPill.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800";
+        recContainer.innerHTML = `
+          <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-xs sm:text-sm text-slate-900">Session Revision Recording (Yesterday)</div>
+              <div class="text-[11px] text-slate-500">Instructor: ${st.teacher || 'Sheikh Ahmad'} • Duration: 30 mins</div>
+            </div>
+            <button onclick="alert('Opening secure revision player... Video download is protected.')" class="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-1">
+              <span>▶</span> <span>Watch Class</span>
+            </button>
+          </div>
+        `;
+      } else {
+        recBadge.innerText = "🔒 Privacy Mode: Recording OFF";
+        recBadge.className = "px-2.5 py-1 bg-rose-100 text-rose-800 border border-rose-200 rounded-md text-xs font-bold";
+        recPill.innerText = "Recording OFF";
+        recPill.className = "text-xs px-2.5 py-1 rounded-full font-bold bg-rose-100 text-rose-800";
+        recContainer.innerHTML = `
+          <div class="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-950 flex items-start gap-3">
+            <span class="text-xl">🔒</span>
+            <div>
+              <h4 class="font-bold text-xs sm:text-sm">Class Recording Disabled (Privacy Mode Active)</h4>
+              <p class="text-xs text-rose-700 mt-0.5">As per parental instructions, live Zoom sessions for this student are strictly confidential and will never be recorded or stored on the server.</p>
+            </div>
+          </div>
+        `;
+      }
+
+      title.innerText = "Course: " + st.batch;
+      subtitle.innerText = `Student: ${st.name} (Age: ${st.age || 'N/A'}) • Instructor: ${st.teacher || 'Sheikh Ahmad'} • Days: ${st.classDays || 'Mon-Thu'}`;
+
+      container.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-slate-500">Billing Cycle:</span>
+          <span class="text-xs font-bold text-slate-900">October 2026</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-slate-500">Amount Due:</span>
+          <span class="text-lg font-extrabold text-slate-900">${symbol}${st.fee}.00 ${st.currency}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold text-slate-500">Due Date:</span>
+          <span class="text-xs font-bold text-red-600">10 Oct 2026</span>
+        </div>
+        <div class="pt-2">
+          <span class="w-full block text-center py-1 rounded-full text-xs font-bold ${st.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+            ${st.status === 'paid' ? '✓ Fee Paid' : 'Payment Pending (Unpaid)'}
+          </span>
+        </div>
+      `;
+    }
+
+    function updateStats() {
+      const students = getStoredStudents();
+      const reports = getStoredReports();
+      
+      document.getElementById('statTotalStudents').innerText = students.length;
+      document.getElementById('statTotalReports').innerText = reports.length + " Reports";
+
+      let oneOnOneCount = 0;
+      let groupCount = 0;
+      let totalUSD = 0;
+
+      students.forEach(st => {
+        if (st.classMode === '1-on-1') oneOnOneCount++;
+        else groupCount++;
+
+        if (st.status === 'paid') {
+          totalUSD += Number(st.fee);
+        }
+      });
+
+      document.getElementById('statClassDistribution').innerText = `${oneOnOneCount} 1-on-1 • ${groupCount} Group Students`;
+      document.getElementById('statTotalRevenue').innerText = "$" + totalUSD.toLocaleString();
+    }
+
+    // --- 4. ATTENDANCE & REMARKS HELPERS ---
+    function setStudentAttendance(id, status) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (st) {
+        st.attendance = status;
+        saveStoredStudents(students);
+      }
+    }
+
+    function updateStudentRemarks(id, value) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (st) {
+        st.remarks = value;
+        localStorage.setItem('qs_lms_students', JSON.stringify(students));
+      }
+    }
+
+    function saveAttendanceSession() {
+      const lesson = document.getElementById('todayLessonCovered').value;
+      alert(`✅ Success! Today's session logs and curriculum notes saved:\n"${lesson}"`);
+    }
+
+    function toggleFeeStatus(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (st) {
+        st.status = st.status === 'paid' ? 'unpaid' : 'paid';
+        saveStoredStudents(students);
+      }
+    }
+
+    function deleteStudent(id) {
+      if (confirm('Are you sure you want to remove this student record?')) {
+        let students = getStoredStudents();
+        students = students.filter(s => s.id !== id);
+        saveStoredStudents(students);
+      }
+    }
+
+    // --- 5. 1-ON-1 SPECIFIC ACTIONS ---
+    function sendWaitingAlert(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      const s = getAcademySettings();
+      const msg = encodeURIComponent(
+        `Assalamu Alaikum respected ${st.guardian}!\n\n` +
+        `${st.teacher || 'Your teacher'} is currently waiting in the live Zoom classroom for ${st.name}'s 1-on-1 lesson.\n\n` +
+        `• Schedule: ${st.timeSlot || 'Now'} (${st.timezone || 'Local Time'})\n\n` +
+        `Please connect the student right away so class time is not lost. Thank you!\n\n` +
+        `${s.academyName}`
+      );
+
+      window.open(`https://wa.me/${st.whatsapp}?text=${msg}`, '_blank');
+    }
+
+    function openRescheduleModal(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      activeRescheduleStudentId = id;
+      document.getElementById('rescheduleStudentLabel').innerText = `Student: ${st.name} (${st.timeSlot} • ${st.timezone})`;
+      document.getElementById('rescheduleDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('rescheduleModal').classList.remove('hidden');
+    }
+
+    function closeRescheduleModal() {
+      document.getElementById('rescheduleModal').classList.add('hidden');
+      activeRescheduleStudentId = null;
+    }
+
+    function confirmReschedule() {
+      if (!activeRescheduleStudentId) return;
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === activeRescheduleStudentId);
+      if (!st) return;
+
+      const s = getAcademySettings();
+      const newDate = document.getElementById('rescheduleDate').value;
+      const newSlot = document.getElementById('rescheduleTime').value;
+      const reason = document.getElementById('rescheduleReason').value || 'Informed absence';
+
+      st.remarks = `Rescheduled to ${newDate} (${newSlot}) - ${reason}`;
+      st.attendance = 'excused';
+      saveStoredStudents(students);
+      closeRescheduleModal();
+
+      const msg = encodeURIComponent(
+        `Assalamu Alaikum respected ${st.guardian}!\n\n` +
+        `Your 1-on-1 make-up class for ${st.name} with ${st.teacher || 'Instructor'} has been rescheduled:\n\n` +
+        `• New Date: ${newDate}\n` +
+        `• Time Slot: ${newSlot} (${st.timezone || 'Local Time'})\n` +
+        `• Reason: ${reason}\n\n` +
+        `${s.academyName}`
+      );
+
+      if (confirm('Class rescheduled! Would you like to notify the parent on WhatsApp now?')) {
+        window.open(`https://wa.me/${st.whatsapp}?text=${msg}`, '_blank');
+      }
+    }
+
+    // --- 6. ADMISSION FORM HANDLERS ---
+    function toggleClassModeFields() {
+      const mode = document.getElementById('formClassMode').value;
+      const slotInput = document.getElementById('formTimeSlot');
+      if (mode === '1-on-1') {
+        slotInput.value = '04:00 PM - 04:30 PM (Daily)';
+      } else {
+        slotInput.value = '06:00 PM - 07:00 PM';
+      }
+    }
+
+    function openAdmissionModal() {
+      document.getElementById('admissionModal').classList.remove('hidden');
+    }
+
+    function closeAdmissionModal() {
+      document.getElementById('admissionModal').classList.add('hidden');
+    }
+
+    function handleAdmissionSubmit(e) {
+      e.preventDefault();
+      const students = getStoredStudents();
+      const newId = "QS-" + (100 + students.length + 1);
+
+      const recPreference = document.querySelector('input[name="recordingPref"]:checked').value;
+
+      const newStudent = {
+        id: newId,
+        name: document.getElementById('formStudentName').value,
+        age: document.getElementById('formStudentAge').value,
+        guardian: document.getElementById('formGuardianName').value,
+        whatsapp: document.getElementById('formWhatsApp').value,
+        country: document.getElementById('formCountry').value,
+        timezone: document.getElementById('formTimezone').value,
+        classMode: document.getElementById('formClassMode').value,
+        timeSlot: document.getElementById('formTimeSlot').value,
+        classDays: document.getElementById('formClassDays').value,
+        teacher: document.getElementById('formTeacher').value,
+        recordingPolicy: recPreference, // 'allowed' or 'disabled'
+        batch: document.getElementById('formBatch').value,
+        currency: document.getElementById('formCurrency').value,
+        fee: Number(document.getElementById('formFeeAmount').value),
+        status: "unpaid",
+        attendance: "present",
+        remarks: "New Admission",
+        sabaqCategory: document.getElementById('formBatch').value.includes('Qaida') ? 'qaida' : document.getElementById('formBatch').value.includes('Hifz') ? 'hifz' : 'tajweed',
+        sabaq: document.getElementById('formBatch').value.includes('Qaida') ? "Noorani Qaida Lesson 1: Individual Letters" : document.getElementById('formBatch').value.includes('Hifz') ? "Para 30: Surah An-Naba (Ayat 1-10)" : "Surah Al-Fatihah (Ayat 1-7)",
+        sabqi: "Initial assessment completed",
+        manzil: "N/A",
+        grade: "⭐⭐⭐⭐⭐ A+ (Excellent / ممتاز)",
+        mistakes: "0 Mistakes (Flawless Recitation)",
+        homework: "Practice daily recitation with Tajweed rules",
+        lastLogDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        history: []
+      };
+
+      students.push(newStudent);
+      saveStoredStudents(students);
+      closeAdmissionModal();
+      
+      // Reset form
+      document.getElementById('formStudentName').value = '';
+      document.getElementById('formStudentAge').value = '';
+      document.getElementById('formGuardianName').value = '';
+      document.getElementById('formWhatsApp').value = '';
+      document.getElementById('formCountry').value = '';
+      
+      alert(`🎉 Student "${newStudent.name}" enrolled successfully!\nRoll No: ${newId}\nRecording Policy: ${newStudent.recordingPolicy === 'disabled' ? '🚫 OFF (Privacy Mode)' : '✅ ALLOWED'}`);
+    }
+
+    // --- 6B. QURANIC PROGRESS & SABAQ MODAL HANDLERS ---
+    function setPresetCategory(cat) {
+      currentLogCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-900', 'font-bold');
+        btn.classList.add('border-slate-200', 'bg-white', 'text-slate-700', 'font-semibold');
+      });
+
+      const activeBtn = document.getElementById('catBtn-' + cat);
+      if (activeBtn) {
+        activeBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900', 'font-bold');
+        activeBtn.classList.remove('border-slate-200', 'bg-white', 'text-slate-700', 'font-semibold');
+      }
+
+      const sabaqInput = document.getElementById('logSabaq');
+      const sabqiInput = document.getElementById('logSabqi');
+      const manzilInput = document.getElementById('logManzil');
+
+      if (cat === 'tajweed') {
+        sabaqInput.placeholder = "e.g. Surah Al-Mulk (Ayat 1-14) with Makharij practice";
+        sabqiInput.placeholder = "e.g. Surah Al-Jumu'ah (Ayat 1-11)";
+        manzilInput.placeholder = "e.g. Para 28 (Qadd Sami'a) Revision";
+      } else if (cat === 'hifz') {
+        sabaqInput.placeholder = "e.g. Para 15, Surah Al-Isra (Page 282, 1 Full Page)";
+        sabqiInput.placeholder = "e.g. Last 5 pages (Surah An-Nahl revision)";
+        manzilInput.placeholder = "e.g. Para 14 (Rub' / 1/4th Para revision)";
+      } else if (cat === 'qaida') {
+        sabaqInput.placeholder = "e.g. Noorani Qaida Lesson 5: Tanween, Lines 1-3";
+        sabqiInput.placeholder = "e.g. Lesson 4: Huroof Maddah";
+        manzilInput.placeholder = "N/A for Beginners";
+      } else if (cat === 'islamic') {
+        sabaqInput.placeholder = "e.g. 4th Kalimah with English & Urdu translation";
+        sabqiInput.placeholder = "e.g. Daily Masnoon Duas (Eating, Sleeping)";
+        manzilInput.placeholder = "e.g. Practical Salah & Wudu steps";
+      }
+    }
+
+    function openQuranLogModal(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      document.getElementById('logStudentId').value = st.id;
+      document.getElementById('logStudentRoll').innerText = st.id;
+      document.getElementById('logStudentName').innerText = `Update Quran Progress: ${st.name}`;
+      document.getElementById('logStudentMeta').innerText = `Instructor: ${st.teacher || 'Sheikh Ahmad'} • Course: ${st.batch}`;
+
+      document.getElementById('logSabaq').value = st.sabaq || '';
+      document.getElementById('logSabqi').value = (st.sabqi && st.sabqi !== 'N/A') ? st.sabqi : '';
+      document.getElementById('logManzil').value = (st.manzil && st.manzil !== 'N/A') ? st.manzil : '';
+      if (st.grade) document.getElementById('logGrade').value = st.grade;
+      if (st.mistakes) document.getElementById('logMistakes').value = st.mistakes;
+      document.getElementById('logHomework').value = st.homework || '';
+
+      const cat = st.sabaqCategory || (st.batch && st.batch.includes('Qaida') ? 'qaida' : st.batch && st.batch.includes('Hifz') ? 'hifz' : 'tajweed');
+      setPresetCategory(cat);
+
+      document.getElementById('quranLogModal').classList.remove('hidden');
+    }
+
+    function closeQuranLogModal() {
+      document.getElementById('quranLogModal').classList.add('hidden');
+    }
+
+    function handleQuranLogSubmit(e) {
+      if (e) e.preventDefault();
+      const id = document.getElementById('logStudentId').value;
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return false;
+
+      const sabaq = document.getElementById('logSabaq').value;
+      const sabqi = document.getElementById('logSabqi').value || 'None';
+      const manzil = document.getElementById('logManzil').value || 'N/A';
+      const grade = document.getElementById('logGrade').value;
+      const mistakes = document.getElementById('logMistakes').value;
+      const homework = document.getElementById('logHomework').value;
+      const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      st.sabaqCategory = currentLogCategory;
+      st.sabaq = sabaq;
+      st.sabqi = sabqi;
+      st.manzil = manzil;
+      st.grade = grade;
+      st.mistakes = mistakes;
+      st.homework = homework;
+      st.lastLogDate = dateStr;
+
+      st.history = st.history || [];
+      st.history.unshift({
+        date: dateStr,
+        sabaq,
+        sabqi,
+        manzil,
+        grade,
+        mistakes,
+        homework
+      });
+
+      saveStoredStudents(students);
+      closeQuranLogModal();
+      alert(`✅ Quran Progress Saved for ${st.name}!\n• Sabaq: ${sabaq}\n• Performance: ${grade}`);
+      return true;
+    }
+
+    function handleQuranLogAndWhatsApp() {
+      const id = document.getElementById('logStudentId').value;
+      const saved = handleQuranLogSubmit(null);
+      if (saved) {
+        sendDailyProgressWhatsApp(id);
+      }
+    }
+
+    function sendDailyProgressWhatsApp(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      const s = getAcademySettings();
+      const dateStr = st.lastLogDate || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      const msg = encodeURIComponent(
+        `*Assalamu Alaikum wa Rahmatullah!*\n` +
+        `Respected Guardian *${st.guardian}*,\n\n` +
+        `Here is today's *Daily Quran Progress Report* for *${st.name}*:\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `📅 *Date:* ${dateStr}\n` +
+        `📚 *Course:* ${st.batch}\n` +
+        `👨‍🏫 *Instructor:* ${st.teacher || 'Assigned Instructor'}\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `📖 *Sabaq (New Lesson):* ${st.sabaq || 'Lesson completed'}\n` +
+        (st.sabqi && st.sabqi !== 'N/A' && st.sabqi !== 'None' ? `🔄 *Sabqi (Recent Revision):* ${st.sabqi}\n` : '') +
+        (st.manzil && st.manzil !== 'N/A' && st.manzil !== 'None' ? `🕋 *Manzil (Juz Revision):* ${st.manzil}\n` : '') +
+        `⭐ *Daily Performance:* ${st.grade || '⭐⭐⭐⭐⭐ A+ (Excellent)'}\n` +
+        (st.mistakes ? `🎯 *Recitation Feedback:* ${st.mistakes}\n` : '') +
+        `✅ *Attendance Status:* ${(st.attendance || 'present').toUpperCase()}\n` +
+        (st.homework ? `📝 *Homework & Practice:* ${st.homework}\n` : '') +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `⏰ Next Session: ${st.classDays} @ ${st.timeSlot} (${st.timezone})\n\n` +
+        `May Allah Ta'ala grant the student barakah, love for the Holy Quran, and steadfastness. Ameen!\n\n` +
+        `*${s.academyName}*\n` +
+        `Helpline: ${s.phone}`
+      );
+
+      window.open(`https://wa.me/${st.whatsapp}?text=${msg}`, '_blank');
+    }
+
+    function changeActiveStudent(id) {
+      activeStudentPortalId = id;
+      renderStudentPortal();
+    }
+
+    // --- 7. SUPERVISOR REPORT HANDLER ---
+    function saveSupervisionReport() {
+      const teacher = document.getElementById('supTeacherName').value;
+      const batch = document.getElementById('supBatchName').value;
+      const date = document.getElementById('supDate').value || new Date().toISOString().split('T')[0];
+      const strengths = document.getElementById('supStrengths').value;
+      const improvements = document.getElementById('supImprovements').value;
+
+      const p = Number(document.getElementById('scorePunctuality').value);
+      const d = Number(document.getElementById('scoreDelivery').value);
+      const e = Number(document.getElementById('scoreEngagement').value);
+      const c = Number(document.getElementById('scoreControl').value);
+      const avg = ((p + d + e + c) / 4).toFixed(1);
+
+      const reports = getStoredReports();
+      reports.unshift({
+        id: Date.now(),
+        teacher,
+        batch,
+        date,
+        rating: avg + " / 5.0",
+        strengths: strengths || "Standard lesson delivery",
+        improvements: improvements || "Keep up the momentum"
+      });
+
+      saveStoredReports(reports);
+      alert(`✅ Inspection Report saved! Average Score: ${avg}/5.0`);
+    }
+
+    // --- 8. VOUCHER PRINTING & MODAL ---
+    function printStudentVoucher(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      applySettingsToUI(); // Ensure fresh bank info
+
+      document.getElementById('vchrNo').innerText = "INV-2026-" + st.id.replace('QS-', '');
+      document.getElementById('vchrStudentName').innerText = st.name;
+      document.getElementById('vchrStudentAge').innerText = st.age || 'N/A';
+      document.getElementById('vchrGuardianName').innerText = st.guardian + " (" + st.country + ")";
+      document.getElementById('vchrTeacher').innerText = st.teacher || 'Sheikh Ahmad';
+      document.getElementById('vchrClassMode').innerText = (st.classMode === '1-on-1' ? '1-on-1 Private Session' : 'Group Cohort Batch');
+      document.getElementById('vchrSchedule').innerText = `${st.classDays || 'Mon-Thu'} @ ${st.timeSlot || '04:00 PM'} (${st.timezone || 'UK/GMT'})`;
+      
+      const symbol = st.currency === 'USD' ? '$' : st.currency === 'GBP' ? '£' : st.currency === 'SAR' ? '﷼ ' : st.currency === 'EUR' ? '€' : 'Rs ';
+      document.getElementById('vchrAmount').innerText = symbol + st.fee + ".00 " + st.currency;
+      document.getElementById('vchrTotal').innerText = symbol + st.fee + ".00 " + st.currency;
+      document.getElementById('vchrIssueDate').innerText = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      document.getElementById('voucherModal').classList.remove('hidden');
+    }
+
+    function printCurrentStudentVoucher() {
+      const students = getStoredStudents();
+      if (students.length === 0) {
+        alert('Please add a student first using "+ New Admission".');
+        return;
+      }
+      printStudentVoucher(students[0].id);
+    }
+
+    function closeVoucherModal() {
+      document.getElementById('voucherModal').classList.add('hidden');
+    }
+
+    // --- 9. DIRECT WHATSAPP SENDER ---
+    function sendFeeWhatsApp(id) {
+      const students = getStoredStudents();
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      const s = getAcademySettings();
+      const symbol = st.currency === 'USD' ? '$' : st.currency === 'GBP' ? '£' : st.currency === 'SAR' ? '﷼ ' : st.currency === 'EUR' ? '€' : 'Rs ';
+      const msg = encodeURIComponent(
+        `Assalamu Alaikum respected ${st.guardian}!\n\n` +
+        `This is a polite reminder from ${s.academyName} regarding the monthly tuition fee for ${st.name} (Course: ${st.batch} with ${st.teacher || 'Instructor'}).\n\n` +
+        `• Schedule: ${st.classDays || 'Mon-Thu'} (${st.timeSlot || 'Slot'} - ${st.timezone || 'Timezone'})\n` +
+        `• Amount Due: ${symbol}${st.fee} ${st.currency}\n` +
+        `• Due Date: 10 October 2026\n\n` +
+        `Payment Options:\n` +
+        `Bank: ${s.bankName}\n` +
+        `Title: ${s.accountTitle}\n` +
+        `IBAN: ${s.bankIBAN}\n` +
+        `EasyPaisa: ${s.easyPaisa}\n` +
+        `JazzCash: ${s.jazzCash}\n\n` +
+        `• International Remittance: ${s.overseasNote}\n\n` +
+        `Please share a confirmation receipt after payment. Jazakum Allahu Khairan!\n` +
+        `Helpline: ${s.phone}`
+      );
+
+      window.open(`https://wa.me/${st.whatsapp}?text=${msg}`, '_blank');
+    }
+
+    function clearAllData() {
+      if (confirm('Are you sure you want to clear all student records? This will give you a completely clean ledger.')) {
+        localStorage.removeItem('qs_lms_students');
+        localStorage.removeItem('qs_lms_reports');
+        renderAdminTable();
+        renderTeacherTable();
+        renderSupervisorReports();
+        renderStudentPortal();
+        updateStats();
+        alert('All records have been cleared!');
+      }
+    }
+
+    function launchZoom() {
+      const zoomUrl = prompt("Enter or confirm your Zoom Meeting Link:", "https://zoom.us/j/1234567890");
+      if (zoomUrl) window.open(zoomUrl, '_blank');
+    }
+
+    function launchTeams() {
+      const teamsUrl = prompt("Enter or confirm your Microsoft Teams Meeting Link:", "https://teams.microsoft.com/l/meetup-join/...");
+      if (teamsUrl) window.open(teamsUrl, '_blank');
+    }
+
+    // --- 10. TAB SWITCHER ---
+    function switchRole(role) {
+      document.querySelectorAll('.role-view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active', 'text-emerald-700');
+        btn.classList.add('text-slate-600');
+      });
+
+      document.getElementById('view-' + role).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + role);
+      activeBtn.classList.add('tab-active');
+      activeBtn.classList.remove('text-slate-600');
+
+      const labels = {
+        admin: 'Super Admin Portal View',
+        teacher: 'Teacher Portal View (1-on-1 & Group)',
+        supervisor: 'Supervisor Portal View',
+        student: 'Student & Fee Portal View'
+      };
+      document.getElementById('currentUserLabel').innerText = labels[role];
+    }
+
+    // --- INITIALIZE ON PAGE LOAD ---
+    document.addEventListener('DOMContentLoaded', () => {
+      applySettingsToUI();
+      document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      document.getElementById('supDate').value = new Date().toISOString().split('T')[0];
+
+      renderAdminTable();
+      renderTeacherTable();
+      renderSupervisorReports();
+      renderStudentPortal();
+      updateStats();
+    });
+  </script>
+</body>
+</html>
