@@ -198,6 +198,8 @@ export default function RealLMSApp() {
     email: string;
     role: "admin" | "teacher" | "supervisor" | "student";
     teacherId?: string;
+    studentId?: string;
+    originalRole?: "admin" | "teacher" | "supervisor" | "student";
   } | null>(null);
 
   // Login Authentication & Passcode States
@@ -297,7 +299,14 @@ export default function RealLMSApp() {
     teacherId?: string,
     studentId?: string
   ) => {
-    const user = { role, name, email, teacherId, studentId };
+    const user = {
+      role,
+      name,
+      email,
+      teacherId,
+      studentId,
+      originalRole: role
+    };
     setCurrentUser(user);
     if (studentId) setActiveStudentId(studentId);
     localStorage.setItem("qs_auth_user", JSON.stringify(user));
@@ -566,43 +575,44 @@ export default function RealLMSApp() {
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                  Select Student to View Dashboard:
+                  Enter Student ID / Roll No (e.g. QSK-STU-001):
                 </label>
                 <div className="flex gap-2">
-                  <select
-                    value={selectedStudentLoginId}
-                    onChange={(e) => setSelectedStudentLoginId(e.target.value)}
-                    className="flex-1 bg-slate-900 border border-amber-500/50 text-white text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-1 focus:ring-amber-400"
-                  >
-                    <option value="">-- Choose Enrolled Student (127 Students) --</option>
-                    {students.slice(0, 50).map((st) => (
-                      <option key={st.id} value={st.id}>
-                        {st.id} • {st.name} ({st.timeSlot})
-                      </option>
-                    ))}
-                    {students.length > 50 && (
-                      <optgroup label="More Students...">
-                        {students.slice(50).map((st) => (
-                          <option key={st.id} value={st.id}>
-                            {st.id} • {st.name} ({st.timeSlot})
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-                  </select>
+                  <input
+                    type="text"
+                    value={studentSearchInput}
+                    onChange={(e) => setStudentSearchInput(e.target.value)}
+                    placeholder="Enter Student ID or Name (e.g. QSK-STU-001)"
+                    className="flex-1 bg-slate-900 border border-amber-500/50 text-white text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-1 focus:ring-amber-400 placeholder:text-slate-500"
+                  />
                   <button
                     onClick={() => {
-                      const st = students.find((s) => s.id === selectedStudentLoginId) || students[0];
+                      const q = studentSearchInput.trim().toLowerCase();
+                      if (!q) {
+                        alert("براہ کرم اپنا Student ID یا رول نمبر درج کریں!");
+                        return;
+                      }
+                      const st = students.find(
+                        (s) =>
+                          s.id.toLowerCase() === q ||
+                          s.name.toLowerCase().includes(q) ||
+                          s.id.toLowerCase().replace("qsk-stu-", "") === q.replace("qsk-stu-", "")
+                      );
                       if (st) {
                         setActiveStudentId(st.id);
                         loginAs("student", `${st.name} (${st.id})`, "student@quranicskills.com", undefined, st.id);
+                      } else {
+                        alert("❌ طالب علم نہیں ملا! براہ کرم درست Student ID یا رول نمبر درج کریں۔");
                       }
                     }}
-                    className="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow whitespace-nowrap transition-all"
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow whitespace-nowrap transition-all"
                   >
                     Login →
                   </button>
                 </div>
+                <p className="text-[10px] text-amber-300/80 mt-1">
+                  🔒 ہر طالب علم صرف اپنا رول نمبر درج کر کے اپنا الگ پورٹل کھولے گا۔
+                </p>
               </div>
             </div>
           </div>
@@ -615,8 +625,12 @@ export default function RealLMSApp() {
     );
   }
 
-  // Active student object
-  const currentStudent = students.find((s) => s.id === activeStudentId) || students[0] || null;
+  // Active student object (locked strictly to logged-in student if student role)
+  const currentStudent =
+    (currentUser?.studentId ? students.find((s) => s.id === currentUser.studentId) : null) ||
+    students.find((s) => s.id === activeStudentId) ||
+    students[0] ||
+    null;
 
   // Filtered students for Admin search
   const filteredAdminStudents = students.filter((s) => {
@@ -690,63 +704,82 @@ export default function RealLMSApp() {
       {/* ========================================================================= */}
       {/* ROLE SWITCHER NAVIGATION BAR */}
       {/* ========================================================================= */}
-      <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-2 sm:space-x-6 overflow-x-auto py-2">
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "admin" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "admin"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 text-purple-600" />
-                <span>Super Admin</span>
-              </button>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "teacher" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "teacher"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <GraduationCap className="w-4 h-4 text-emerald-600" />
-                <span>Teacher Portal</span>
-              </button>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "supervisor" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "supervisor"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <Eye className="w-4 h-4 text-blue-600" />
-                <span>Supervisor Portal</span>
-              </button>
-              <button
-                onClick={() => setCurrentUser({ ...currentUser, role: "student" })}
-                className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
-                  currentUser.role === "student"
-                    ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
-                    : "text-slate-600 hover:text-emerald-700"
-                }`}
-              >
-                <Users className="w-4 h-4 text-amber-600" />
-                <span>Student & Fee Portal</span>
-              </button>
-            </div>
+      {currentUser.originalRole !== "student" ? (
+        <nav className="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2 sm:space-x-6 overflow-x-auto py-2">
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "admin" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "admin"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>Super Admin</span>
+                </button>
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "teacher" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "teacher"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4 text-emerald-600" />
+                  <span>Teacher Portal</span>
+                </button>
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "supervisor" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "supervisor"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <Eye className="w-4 h-4 text-blue-600" />
+                  <span>Supervisor Portal</span>
+                </button>
+                <button
+                  onClick={() => setCurrentUser({ ...currentUser, role: "student" })}
+                  className={`px-3 py-2 text-xs sm:text-sm font-bold flex items-center gap-2 rounded-lg transition-all ${
+                    currentUser.role === "student"
+                      ? "border-b-2 border-emerald-700 text-emerald-700 bg-emerald-50/50"
+                      : "text-slate-600 hover:text-emerald-700"
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-amber-600" />
+                  <span>Student & Fee Portal</span>
+                </button>
+              </div>
 
-            <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-emerald-800 font-bold">1-Click Portal Switcher</span>
+              <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-emerald-800 font-bold">1-Click Portal Switcher</span>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      ) : (
+        <nav className="bg-emerald-950 text-white border-b border-emerald-800 shadow-sm sticky top-16 z-40 py-2.5 px-4 sm:px-8">
+          <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-bold text-white">Student Dashboard Session: {currentStudent?.name}</span>
+              <span className="text-emerald-300 font-mono font-bold">({currentStudent?.id})</span>
+            </div>
+            <button
+              onClick={logout}
+              className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold flex items-center gap-1.5 shadow-sm transition-all text-xs"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out (لاگ آؤٹ)</span>
+            </button>
+          </div>
+        </nav>
+      )}
 
       {/* ========================================================================= */}
       {/* MAIN CONTENT AREA */}
@@ -1886,9 +1919,9 @@ export default function RealLMSApp() {
                       ? "🔒 Recording: OFF (Privacy Mode)"
                       : "🎥 Recording: Active"}
                   </span>
-                  {students.length > 1 && (
+                  {currentUser.originalRole !== "student" && students.length > 1 ? (
                     <div className="flex items-center gap-1.5 ml-1">
-                      <label className="text-xs font-bold text-slate-500">Select Profile:</label>
+                      <label className="text-xs font-bold text-slate-500">Admin Preview:</label>
                       <select
                         value={currentStudent?.id || ""}
                         onChange={(e) => setActiveStudentId(e.target.value)}
@@ -1901,6 +1934,10 @@ export default function RealLMSApp() {
                         ))}
                       </select>
                     </div>
+                  ) : (
+                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-md text-xs font-bold">
+                      🆔 Roll No: {currentStudent?.id}
+                    </span>
                   )}
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 mt-2">
