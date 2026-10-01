@@ -401,6 +401,7 @@ export default function RealLMSApp() {
       (st.mistakes ? `🎯 *Recitation Feedback:* ${st.mistakes}\n` : "") +
       `✅ *Attendance Status:* ${(st.attendance || "present").toUpperCase()}\n` +
       (st.homework ? `📝 *Homework & Practice:* ${st.homework}\n` : "") +
+      (st.recordingUrl ? `🎥 *Class Recording:* ${st.recordingUrl}\n` : "") +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `⏰ Next Session: ${st.classDays} @ ${st.timeSlot} (${st.timezone})\n\n` +
       `May Allah Ta'ala grant the student barakah, love for the Holy Quran, and steadfastness. Ameen!\n\n` +
@@ -2107,13 +2108,15 @@ export default function RealLMSApp() {
               </div>
 
               <div className="flex gap-2">
-                <button
-                  onClick={() => alert("Joining live Zoom classroom...")}
-                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow flex items-center gap-1.5"
+                <a
+                  href="https://us05web.zoom.us/j/2843243400?pwd=NHhHY204bnRXazJtaHdBTndBZVI2dz09"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow flex items-center gap-1.5 transition-all"
                 >
                   <Video className="w-4 h-4" />
-                  <span>Join Zoom</span>
-                </button>
+                  <span>Join Live Class (Zoom)</span>
+                </a>
               </div>
             </div>
 
@@ -2185,9 +2188,14 @@ export default function RealLMSApp() {
 
                 {/* Cloud Recordings */}
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
-                  <h3 className="font-bold text-base text-slate-900 border-b border-slate-100 pb-3">
-                    Class Recordings (دہرائی کے لیے ریکارڈنگز)
-                  </h3>
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 className="font-bold text-base text-slate-900">
+                      Class Recordings (دہرائی کے لیے ریکارڈنگز)
+                    </h3>
+                    <span className="text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200">
+                      Parent Portal Access
+                    </span>
+                  </div>
                   {currentStudent?.recordingPolicy === "disabled" ? (
                     <div className="p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-950 flex items-start gap-3">
                       <Lock className="w-5 h-5 text-rose-600 mt-0.5" />
@@ -2199,18 +2207,33 @@ export default function RealLMSApp() {
                         </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+                  ) : currentStudent?.recordingUrl ? (
+                    <div className="p-4 rounded-xl border border-emerald-300 bg-emerald-50/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                       <div>
-                        <div className="font-bold text-slate-900">Yesterday&apos;s Tajweed Session</div>
-                        <div className="text-slate-500">Instructor: {currentStudent?.teacher} • 30 mins</div>
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-950 text-sm">
+                          <Video className="w-4 h-4 text-emerald-700" />
+                          <span>Latest Lesson Recording Ready!</span>
+                        </div>
+                        <div className="text-emerald-800 mt-0.5 text-xs">
+                          Date: {currentStudent.lastLogDate || "Latest"} • Lesson: {currentStudent.sabaq}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => alert("Playing protected video player...")}
-                        className="px-3 py-1.5 bg-purple-700 text-white rounded-lg font-bold"
+                      <a
+                        href={currentStudent.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all text-xs whitespace-nowrap"
                       >
-                        ▶ Watch Class
-                      </button>
+                        <Video className="w-4 h-4" />
+                        <span>▶ Watch Lesson Recording</span>
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4 text-slate-400" />
+                        <span>No recording attached for today&apos;s session. Your teacher will attach the Zoom link after class.</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2294,6 +2317,7 @@ export default function RealLMSApp() {
                     const grade = (form.elements.namedItem("logGrade") as HTMLSelectElement).value;
                     const mistakes = (form.elements.namedItem("logMistakes") as HTMLSelectElement).value;
                     const homework = (form.elements.namedItem("logHomework") as HTMLTextAreaElement).value;
+                    const recordingUrl = (form.elements.namedItem("logRecordingUrl") as HTMLInputElement)?.value?.trim() || "";
                     const dateStr = new Date().toLocaleDateString("en-GB", {
                       day: "2-digit",
                       month: "short",
@@ -2310,8 +2334,9 @@ export default function RealLMSApp() {
                           grade,
                           mistakes,
                           homework,
+                          recordingUrl: recordingUrl || s.recordingUrl,
                           lastLogDate: dateStr,
-                          history: [{ date: dateStr, sabaq, sabqi, manzil, grade, mistakes, homework }, ...(s.history || [])]
+                          history: [{ date: dateStr, sabaq, sabqi, manzil, grade, mistakes, homework, recordingUrl }, ...(s.history || [])]
                         };
                       }
                       return s;
@@ -2437,6 +2462,23 @@ export default function RealLMSApp() {
                         <option value="3-4 Mistakes (Needs revision)">3-4 Mistakes (Needs revision)</option>
                       </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="font-bold text-slate-700 flex items-center gap-1.5 text-xs">
+                        <Video className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Class Recording Link (ریکارڈنگ لنک - اختیاری)</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400">Zoom Cloud / Google Drive URL</span>
+                    </div>
+                    <input
+                      name="logRecordingUrl"
+                      type="url"
+                      defaultValue={target.recordingUrl || ""}
+                      placeholder="https://us05web.zoom.us/rec/share/... or Drive link"
+                      className="w-full border border-blue-200 focus:border-blue-500 rounded-xl p-2.5 text-xs bg-blue-50/20 font-mono"
+                    />
                   </div>
 
                   <div>

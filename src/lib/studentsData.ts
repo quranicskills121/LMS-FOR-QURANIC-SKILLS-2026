@@ -10,6 +10,7 @@ export interface StudentHistoryEntry {
   mistakes?: string;
   homework?: string;
   substituteTeacher?: string;
+  recordingUrl?: string;
 }
 
 export interface Student {
@@ -38,6 +39,7 @@ export interface Student {
   mistakes: string;
   homework: string;
   lastLogDate: string;
+  recordingUrl?: string;
   dispatchStatus?: "pending" | "sent" | string;
   substituteTeacher?: string;
   isWaitingAlert?: boolean;
